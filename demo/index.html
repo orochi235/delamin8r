@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>reticul8r</title>
+    <link rel="stylesheet" href="./demo.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <h1>reticul8r</h1>
+      <p>The card on the right is the same markup as the one on the left, wrapped.</p>
+    </header>
+
+    <main class="bench">
+      <section class="slot">
+        <h2 class="slot__label">unwrapped</h2>
+        <div class="stagewrap"><div class="card" id="control"></div></div>
+      </section>
+
+      <section class="slot">
+        <h2 class="slot__label">reticulized</h2>
+        <div id="subject" class="stagewrap"><div class="card"></div></div>
+      </section>
+    </main>
+
+    <aside class="panel">
+      <div class="panel__row">
+        <label for="mode">mode</label>
+        <select id="mode">
+          <option value="window">window</option>
+          <option value="tilt">tilt</option>
+        </select>
+      </div>
+      <div class="panel__row">
+        <label for="driver">driver</label>
+        <select id="driver">
+          <option value="pointer">pointer</option>
+          <option value="scroll">scroll</option>
+          <option value="orientation">orientation</option>
+          <option value="false">none</option>
+        </select>
+      </div>
+      <div class="panel__row">
+        <label for="origin">origin</label>
+        <input id="origin" type="range" min="0" max="0.6" step="0.05" value="0" />
+        <output id="originOut">0.00</output>
+      </div>
+      <div class="panel__row">
+        <label for="falloff">falloff</label>
+        <input id="falloff" type="range" min="0.2" max="1" step="0.05" value="0.5" />
+        <output id="falloffOut">0.50</output>
+      </div>
+      <div class="panel__row panel__row--check">
+        <input id="scale" type="checkbox" checked />
+        <label for="scale">counter-scale</label>
+      </div>
+      <p class="panel__note" id="note"></p>
+      <ol class="planes" id="planes"></ol>
+    </aside>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

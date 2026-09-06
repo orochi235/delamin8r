@@ -1,69 +1,146 @@
-# reticulizer
+# reticul8r
 
-Turn a DOM subtree into a parallax window: the elements already in it become
-depth planes, and pointer movement swings them past each other inside one
-perspective.
+Turn a DOM subtree into a parallax window. The elements already in it become
+depth planes, and pointer movement — or the phone's accelerometer — swings them
+past each other inside one perspective.
 
-**Nothing is built yet.** This repo holds the idea and a pointer to the working
-proof it came from.
+You don't author a scene. You wrap a container you already wrote.
 
-## What it would do
+```js
+import { reticulize } from 'reticul8r'
 
-You hand it a container. It reads the subtree you already wrote — z-order and
-document order — and puts each element on a Z plane, then drives the whole stack
-from the pointer. No `--depth` per element, no restructuring the markup, no
-authoring a scene. The depth is already in the tree; it just isn't being used
-for anything.
+const handle = reticulize(document.querySelector('.panel'))
+```
 
-That's the bet. If it holds, an existing panel — a modal, a context menu, a
-card, a sidebar — becomes a parallax window by being wrapped, not rewritten.
+That's the whole setup. The stylesheet injects itself, the pointer starts
+driving it, and `handle.destroy()` puts the DOM back exactly as it was.
 
-## The proof it comes from
+React:
 
-slopboard's about-modal (`?` key) does this by hand:
-`~/src/slopboard/src/ParallaxModal.tsx` and `src/parallax-modal.css`. Seven
-planes, `--depth` and `--drift` written out one layer at a time. It works, and
-these are the parts worth keeping:
+```jsx
+import { useReticule } from 'reticul8r/react'
 
-- **One perspective on an outer stage, `transform-style: preserve-3d` on the
-  deck that moves.** Each layer gets
-  `translate3d(px * drift, py * drift, depth)` — a Z offset the deck's rotation
-  turns into parallax, plus an in-plane drift that widens the spread past what
-  the rotation alone gives.
-- **Measure the container that doesn't rotate.** The deck's own
-  `getBoundingClientRect()` is the *rotated* bounding box, so reading it per
-  frame feeds the tilt back into itself. Measure the upright stage instead.
-- **An eased rAF loop writing CSS custom properties** on one element — `--px`,
-  `--py` normalized to ±1, plus a pointer position the surface sheen reads. The
-  layers stay pure CSS; the loop never touches them.
-- **`prefers-reduced-motion` drops the motion and keeps the Z.** The offsets are
-  layout, not animation; flattening them changes the composition.
+function Panel() {
+  const { ref } = useReticule()
+  return <div ref={ref}>{/* whatever you already had */}</div>
+}
+```
 
-## What has to be decided before there is code
+## How depth is decided
 
-- **Depth from what, exactly.** z-index where it's set, document order where it
-  isn't, is a sketch rather than a rule. Does an element with no `z-index`
-  inherit its parent's plane? Do siblings tie, or fan?
-- **The Z range.** The modal spans -260px to +110px against `perspective:
-  900px`. A general function can't hard-code that — derive it from the
-  container's size, or take it as an option.
-- **What stays flat.** The modal's interactive layers re-enable
-  `pointer-events`, and a rotated plane moves where a click lands. Text at depth
-  is the other cost: subpixel rendering goes away on a transformed layer.
-- **How it applies.** Inline styles per element, an injected stylesheet, or
-  custom properties on the container plus one class. The last is closest to what
-  the modal already does.
-- **What drives it.** Pointer is the obvious source; device orientation is the
-  one already asked for elsewhere (blitsklieg's phone mode), and scroll is a
-  third. That argues for keeping the driver separable from the placement.
-- **Shape.** A framework-agnostic function is what makes this a library; a React
-  hook is what makes it usable in slopboard the same afternoon. Probably the
-  function, with the hook as a thin wrapper over it.
+**Nesting makes depth. Siblings tie.**
 
-## Why it isn't just a slopboard refactor
+A child sits one step in front of its parent, and each level of nesting steps by
+half as much as the one above it. Siblings land on the same plane as each other
+unless something actually separates them:
 
-slopboard needs the lift regardless — its handoff queues "lift the parallax out
-of the modal into a function over a DOM subtree" ahead of a right-click context
-menu that would be the second caller. But nothing about the result is
-slopboard-specific, and a second consumer inside one app is not the same as a
-library.
+- **an explicit `z-index`** — each sibling that declares one is lifted a step
+  clear of the tied plane, in the order it declared
+- **a semantic lift** — buttons, links and form controls come forward a step and
+  a half; badges, `mark` and `kbd` come forward two and a half
+- **`data-rz-lift="3"`** on any element, to say it yourself
+
+Document order does not fan siblings on its own. Four rows in a list do not
+overlap, so the order the browser paints them in carries no depth, and
+staircasing them looks like a bug. Set `fan: 1` if you want it anyway.
+
+Depth runs *toward* the viewer, never away, because an element pushed behind its
+own parent disappears into that parent's background.
+
+Put `data-rz-skip` on anything that should stay flat. Its subtree stays flat too.
+
+## The two modes
+
+**`window`** (default) moves `perspective-origin` and rotates nothing. The
+container you pass is the entire apparatus — no element is injected, no
+`transform` of yours is touched, and the panel's own box stays square. It reads
+like looking through a window as your head moves.
+
+**`tilt`** rotates an inner deck, the way a card tips under the cursor. That
+needs a second element: pass one as `deck`, or let it use the container's only
+child, or it injects a wrapper and moves the children into it. The container
+holds the perspective and so does not rotate, which means **your card's visible
+surface has to be inside it**, not on it. The usual shape is a bare wrapper
+around the card.
+
+## What drives it
+
+Pointer by default. `handle.setDriver('scroll')` ties it to the element's
+position in the viewport, and `false` detaches it so you can call
+`handle.set(x, y)` with anything you like — both values are clamped to ±1.
+
+For the accelerometer:
+
+```js
+button.addEventListener('click', async () => {
+  const ok = await handle.enableOrientation()
+  if (!ok) fallBackToPointer()
+})
+```
+
+iOS gates `deviceorientation` behind a permission call made **from inside a user
+gesture, on a secure origin** — so this can't start on its own, and it needs a
+tap. The first event read becomes level; `handle.calibrate()` re-levels to
+wherever the device is now. Landscape is handled.
+
+`prefers-reduced-motion: reduce` drops the driver and the motion. The Z offsets
+stay, because they are the layout, not the animation.
+
+## What it costs
+
+**A subtree can be silently flattened.** `overflow` other than `visible`,
+`opacity` below 1, `filter`, `clip-path`, `mask`, `mix-blend-mode`, `isolation`
+and `contain` all force their children out of 3D — and the computed
+`transform-style` still reads `preserve-3d`, so the failure is invisible.
+`handle.diagnose()` names every flattened plane and the ancestor doing it.
+
+**Text at depth loses subpixel rendering.** Every plane is a composited layer.
+That is the price of the effect, and it is why `maxDepth` exists.
+
+**Planes get `translate`, `scale`, `transform-origin` and a `preserve-3d`.**
+Your `transform` is left alone — depth is written through the individual
+transform properties. A transformed element is a containing block for `fixed`
+and `absolute` descendants, which it may not have been before.
+
+Everything else is a custom property on the container, so nothing per-element is
+hard-coded: `--rz-px` and `--rz-py` are the deflection, ±1, and `--rz-mx` /
+`--rz-my` track the pointer as percentages for a surface sheen.
+
+## Options
+
+| | |
+|---|---|
+| `mode` | `'window'` (default) or `'tilt'` |
+| `step` | Z between adjacent planes in px. Derived from the container when unset |
+| `falloff` | how much the spacing shrinks per level of nesting — `0.5` |
+| `fan` | steps of extra depth per sibling in document order — `0` |
+| `maxDepth` | levels below the container that become planes — unlimited |
+| `origin` | fraction of the stack sliding behind the container — `0`. Only for a transparent one |
+| `perspective`, `swing`, `tilt` | the projection and how far it swings |
+| `scaleCompensate` | keep every plane at its unwrapped size and position — `true` |
+| `drift` | in-plane movement per unit of depth, on top of the perspective |
+| `ease` | fraction of the gap closed per frame — `0.09` |
+| `skip` | selector for elements to leave flat, subtree included |
+| `lift` | replaces the semantic lift rules |
+| `driver` | `'pointer'`, `'scroll'`, `'orientation'`, a custom `Driver`, or `false` |
+| `recenterOnLeave` | return to center when the pointer leaves — `true`. `false` tracks the whole window |
+
+`scaleCompensate` scales each plane about the stage center — the same point the
+perspective projects from — so the two cancel exactly. A wrapped panel is
+pixel-identical to an unwrapped one until something moves.
+
+## Running the demo
+
+```
+npm install && npm run dev
+```
+
+Two copies of the same card side by side, one wrapped, with the plane list and
+the flattening diagnostic live in the panel.
+
+## Where it came from
+
+slopboard's about-modal (`?` key) does this by hand across seven layers with
+`--depth` written out one at a time: `~/src/slopboard/src/ParallaxModal.tsx`.
+The easing, the drift-on-top-of-rotation, and measuring the upright stage rather
+than the rotated deck all come from there.
