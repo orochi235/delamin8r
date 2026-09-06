@@ -1,5 +1,5 @@
 import { collect, DEFAULT_LIFT, fit } from './depth.js'
-import { orientationDriver, pointerDriver, requestOrientationPermission, scrollDriver } from './drivers.js'
+import { fuse, orientationDriver, orientationSupported, pointerDriver, requestOrientationPermission, scrollDriver } from './drivers.js'
 import { approach, join, leave, wake } from './loop.js'
 import { injectStyles } from './styles.js'
 import type { Driver, DriverName, Plane, ReticuleHandle, ReticuleOptions } from './types.js'
@@ -59,13 +59,6 @@ function resolve(stage: HTMLElement, o: ReticuleOptions) {
     lift: o.lift ?? DEFAULT_LIFT,
     recenterOnLeave: o.recenterOnLeave ?? true,
   }
-}
-
-function makeDriver(d: DriverName | Driver, recenterOnLeave: boolean): Driver {
-  if (typeof d !== 'string') return d
-  if (d === 'orientation') return orientationDriver()
-  if (d === 'scroll') return scrollDriver()
-  return pointerDriver(recenterOnLeave)
 }
 
 /**
@@ -201,13 +194,27 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
   }
 
   let driver: Driver | null = null
+  let orientation: Driver | null = null
+  let spec: DriverName | Driver | false = false
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+
+  const build = (d: DriverName | Driver): Driver => {
+    orientation = null
+    if (typeof d !== 'string') return d
+    if (d === 'scroll') return scrollDriver()
+    if (d === 'orientation') return (orientation = orientationDriver())
+    const pointer = pointerDriver(cfg.recenterOnLeave)
+    if (d === 'pointer' || !orientationSupported()) return pointer
+    orientation = orientationDriver()
+    return fuse(pointer, orientation)
+  }
 
   const attach = (d: DriverName | Driver | false) => {
     driver?.stop()
     driver = null
+    spec = d
     if (d === false || reduced.matches) return
-    driver = makeDriver(d, cfg.recenterOnLeave)
+    driver = build(d)
     driver.start(ctx)
   }
 
@@ -228,7 +235,7 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
   join(tick)
   observer.observe(root, { childList: true, subtree: true })
   resizer.observe(stage)
-  attach(options.driver ?? 'pointer')
+  attach(options.driver ?? 'auto')
 
   return {
     stage,
@@ -240,8 +247,17 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     set: (x, y) => ctx.set(x, y),
     async enableOrientation() {
       const ok = await requestOrientationPermission()
-      if (ok) attach('orientation')
-      return ok
+      if (!ok) return false
+      // Bring the sensor into the mix if it was left out, and otherwise restart
+      // it in place so its listener is live now that the prompt has been
+      // answered - without dropping the pointer it is fused with.
+      if (!orientation) attach('auto')
+      else {
+        const fused = driver as { restart?: (d: Driver) => void }
+        if (fused.restart) fused.restart(orientation)
+        else attach(spec === false ? 'auto' : spec)
+      }
+      return true
     },
     calibrate() {
       const d = driver as { calibrate?: () => void } | null

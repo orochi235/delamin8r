@@ -1,6 +1,6 @@
 export { reticulize } from './reticulize.js'
 export { DEFAULT_LIFT } from './depth.js'
-export { orientationDriver, orientationSupported, pointerDriver, requestOrientationPermission, scrollDriver } from './drivers.js'
+export { fuse, orientationDriver, orientationSupported, pointerDriver, requestOrientationPermission, scrollDriver } from './drivers.js'
 export { CSS, injectStyles } from './styles.js'
 export type {
   Driver,
@@ -12,3 +12,4 @@ export type {
   ReticuleHandle,
   ReticuleOptions,
 } from './types.js'
+export type { FusedDriver } from './drivers.js'

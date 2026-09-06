@@ -159,3 +159,84 @@ export function scrollDriver(): Driver {
     },
   }
 }
+
+export interface FusedDriver extends Driver {
+  readonly sources: readonly Driver[]
+  /** Restart one source in place - after its permission was granted, say. */
+  restart(source: Driver): void
+  calibrate(): void
+}
+
+/** Per-event motion below this decays away instead of counting as intent. */
+const DECAY = 0.9
+const TAKEOVER = 0.04
+
+/**
+ * Follow whichever source is actually moving. A desktop has a pointer and a
+ * still accelerometer; a phone has a live accelerometer and only fires
+ * pointermove mid-drag - so asking a consumer to choose one asks them to guess
+ * the device. Each source accumulates a decaying measure of how much it has
+ * moved, and takes over when that crosses the threshold, which keeps sensor
+ * drift from stealing control while a real tilt claims it within a few events.
+ */
+export function fuse(...drivers: Driver[]): FusedDriver {
+  let outer: DriverContext | null = null
+  let active = -1
+  const state = drivers.map(() => ({ x: 0, y: 0, energy: 0, seen: false }))
+
+  const wrap = (i: number): DriverContext => ({
+    get stage() {
+      return outer!.stage
+    },
+    set(x, y) {
+      const s = state[i]!
+      // A source's first reading is its baseline, never a claim - an
+      // accelerometer starts reporting the instant it is listened to, and would
+      // otherwise seize control from the pointer without the device moving.
+      const first = !s.seen
+      s.energy = first ? 0 : s.energy * DECAY + Math.hypot(x - s.x, y - s.y)
+      s.x = x
+      s.y = y
+      s.seen = true
+      if (active !== i) {
+        if (first ? active !== -1 : s.energy < TAKEOVER) return
+        // Energy measures intent since a source last held control, so handing
+        // over clears it everywhere. Without this a source that was moving
+        // hard before it lost control snatches it straight back on its next
+        // event, however still it has gone.
+        for (const other of state) other.energy = 0
+        active = i
+      }
+      outer!.set(x, y)
+    },
+    setSheen(mx, my) {
+      if (active === i) outer!.setSheen?.(mx, my)
+    },
+  })
+
+  return {
+    sources: drivers,
+    start(ctx) {
+      outer = ctx
+      drivers.forEach((d, i) => d.start(wrap(i)))
+    },
+    stop() {
+      for (const d of drivers) d.stop()
+      active = -1
+      for (const s of state) {
+        s.energy = 0
+        s.seen = false
+      }
+      outer = null
+    },
+    restart(source) {
+      const i = drivers.indexOf(source)
+      if (i < 0 || !outer) return
+      source.stop()
+      source.start(wrap(i))
+    },
+    calibrate() {
+      for (const d of drivers) (d as { calibrate?: () => void }).calibrate?.()
+    },
+  }
+}

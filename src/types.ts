@@ -46,7 +46,11 @@ export interface ReticuleOptions {
   injectStyles?: boolean
 }
 
-export type DriverName = 'pointer' | 'orientation' | 'scroll'
+/**
+ * `auto` is the default: the pointer and the accelerometer fused, following
+ * whichever one is moving.
+ */
+export type DriverName = 'auto' | 'pointer' | 'orientation' | 'scroll'
 
 export interface DriverContext {
   /** The element that never rotates, so its rect is safe to measure. */
@@ -82,8 +86,9 @@ export interface ReticuleHandle {
   /** Push a deflection in directly. Both values are clamped to ±1. */
   set(x: number, y: number): void
   /**
-   * Ask for accelerometer access and switch to it. iOS requires this to be
-   * called from inside a user gesture, over HTTPS.
+   * Ask for accelerometer access. iOS requires this to be called from inside a
+   * user gesture, over HTTPS; everywhere else the sensor is already fused in
+   * and this resolves true without prompting.
    */
   enableOrientation(): Promise<boolean>
   /** Take the device's current attitude as level. */

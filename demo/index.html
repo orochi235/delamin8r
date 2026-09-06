@@ -35,6 +35,7 @@
       <div class="panel__row">
         <label for="driver">driver</label>
         <select id="driver">
+          <option value="auto">auto (fused)</option>
           <option value="pointer">pointer</option>
           <option value="scroll">scroll</option>
           <option value="orientation">orientation</option>
@@ -54,6 +55,9 @@
       <div class="panel__row panel__row--check">
         <input id="scale" type="checkbox" checked />
         <label for="scale">counter-scale</label>
+      </div>
+      <div class="panel__row panel__row--check">
+        <button class="btn" type="button" id="tilt">enable accelerometer</button>
       </div>
       <p class="panel__note" id="note"></p>
       <ol class="planes" id="planes"></ol>

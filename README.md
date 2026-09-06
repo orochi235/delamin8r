@@ -65,23 +65,32 @@ around the card.
 
 ## What drives it
 
-Pointer by default. `handle.setDriver('scroll')` ties it to the element's
-position in the viewport, and `false` detaches it so you can call
-`handle.set(x, y)` with anything you like — both values are clamped to ±1.
+By default, the pointer and the accelerometer at the same time — whichever is
+actually moving. A desktop has a pointer and a still sensor; a phone has a live
+sensor and only fires `pointermove` mid-drag, so making you pick one means
+making you guess the device. Each source accumulates a decaying measure of how
+far it has moved and takes over when that crosses a threshold, which keeps
+sensor drift from stealing control while a deliberate tilt claims it in a few
+events.
 
-For the accelerometer:
+On iOS the sensor half needs a permission call **from inside a user gesture, on
+a secure origin**, so it can't join on its own:
 
 ```js
 button.addEventListener('click', async () => {
   const ok = await handle.enableOrientation()
-  if (!ok) fallBackToPointer()
+  if (!ok) tellThemItWasRefused()
 })
 ```
 
-iOS gates `deviceorientation` behind a permission call made **from inside a user
-gesture, on a secure origin** — so this can't start on its own, and it needs a
-tap. The first event read becomes level; `handle.calibrate()` re-levels to
-wherever the device is now. Landscape is handled.
+Everywhere else it is already fused in and that call resolves true without
+prompting. The first sensor reading becomes level; `handle.calibrate()` re-levels
+to wherever the device is now. Landscape is handled.
+
+`setDriver('pointer')`, `'orientation'` or `'scroll'` pins it to one source, and
+`false` detaches it so you can call `handle.set(x, y)` with anything — both
+values clamp to ±1. `fuse(a, b, …)` is exported, so a custom source can join the
+same handover.
 
 `prefers-reduced-motion: reduce` drops the driver and the motion. The Z offsets
 stay, because they are the layout, not the animation.
@@ -122,7 +131,7 @@ hard-coded: `--rz-px` and `--rz-py` are the deflection, ±1, and `--rz-mx` /
 | `ease` | fraction of the gap closed per frame — `0.09` |
 | `skip` | selector for elements to leave flat, subtree included |
 | `lift` | replaces the semantic lift rules |
-| `driver` | `'pointer'`, `'scroll'`, `'orientation'`, a custom `Driver`, or `false` |
+| `driver` | `'auto'` (default: pointer and accelerometer fused), `'pointer'`, `'scroll'`, `'orientation'`, a custom `Driver`, or `false` |
 | `recenterOnLeave` | return to center when the pointer leaves — `true`. `false` tracks the whole window |
 
 `scaleCompensate` scales each plane about the stage center — the same point the

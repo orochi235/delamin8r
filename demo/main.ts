@@ -77,14 +77,15 @@ for (const id of ['mode', 'scale', 'origin', 'falloff']) {
   })
 }
 
-$('driver').addEventListener('change', async () => {
-  const v = driverValue()
-  if (v === 'orientation') {
-    const ok = await handle?.enableOrientation()
-    if (!ok) $('note').textContent = 'orientation refused - needs a tap on iOS, over https'
-    return
-  }
-  handle?.setDriver(v)
+$('driver').addEventListener('change', () => handle?.setDriver(driverValue()))
+
+// iOS only grants the sensor from inside a user gesture, so this has to be a
+// real click rather than anything the page does on its own.
+$('tilt').addEventListener('click', async () => {
+  const ok = await handle?.enableOrientation()
+  $('note').textContent = ok
+    ? 'accelerometer fused in - tilt the device, or move the pointer'
+    : 'accelerometer refused - needs a tap on iOS, over https'
 })
 
 build()
