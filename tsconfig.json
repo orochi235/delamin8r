@@ -15,5 +15,5 @@
     "verbatimModuleSyntax": true,
     "paths": { "reticul8r": ["./src/index.ts"], "reticul8r/react": ["./src/react.ts"] }
   },
-  "include": ["src", "demo"]
+  "include": ["src", "demo", "test"]
 }

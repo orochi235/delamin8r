@@ -125,7 +125,7 @@ hard-coded: `--rz-px` and `--rz-py` are the deflection, ±1, and `--rz-mx` /
 | `fan` | steps of extra depth per sibling in document order — `0` |
 | `maxDepth` | levels below the container that become planes — unlimited |
 | `origin` | fraction of the stack sliding behind the container — `0`. Only for a transparent one |
-| `perspective`, `swing`, `tilt` | the projection and how far it swings |
+| `perspective`, `swing`, `tilt` | the projection and how far it swings. The first two scale with the container unless you set them |
 | `scaleCompensate` | keep every plane at its unwrapped size and position — `true` |
 | `drift` | in-plane movement per unit of depth, on top of the perspective |
 | `ease` | fraction of the gap closed per frame — `0.09` |
@@ -146,6 +146,9 @@ npm install && npm run dev
 
 Two copies of the same card side by side, one wrapped, with the plane list and
 the flattening diagnostic live in the panel.
+
+`npm test` runs the suite: the depth rules, the easing, the driver handover, and
+that `destroy()` leaves the DOM as it found it.
 
 ## Where it came from
 

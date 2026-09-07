@@ -2,7 +2,7 @@ import { collect, DEFAULT_LIFT, fit } from './depth.js'
 import { fuse, orientationDriver, orientationSupported, pointerDriver, requestOrientationPermission, scrollDriver } from './drivers.js'
 import { approach, join, leave, wake } from './loop.js'
 import { injectStyles } from './styles.js'
-import type { Driver, DriverName, Plane, ReticuleHandle, ReticuleOptions } from './types.js'
+import type { Driver, DriverName, Mode, Plane, ReticuleHandle, ReticuleOptions } from './types.js'
 
 const clamp = (n: number) => (n < -1 ? -1 : n > 1 ? 1 : n)
 
@@ -29,9 +29,7 @@ const FLATTENERS: Array<[keyof CSSStyleDeclaration, (v: string) => boolean]> = [
   ['contain', (v) => /paint|layout|strict|content/.test(v)],
 ]
 
-function resolve(stage: HTMLElement, o: ReticuleOptions) {
-  const r = stage.getBoundingClientRect()
-  const maxDim = Math.max(r.width, r.height) || 640
+function resolve(o: ReticuleOptions) {
   const mode = o.mode ?? 'window'
   const tiltDefaults = mode === 'tilt'
   return {
@@ -41,9 +39,6 @@ function resolve(stage: HTMLElement, o: ReticuleOptions) {
     fan: o.fan ?? 0,
     maxDepth: o.maxDepth ?? Infinity,
     origin: o.origin ?? 0,
-    span: 0.4 * maxDim,
-    perspective: o.perspective ?? Math.min(1400, Math.max(700, 1.4 * maxDim)),
-    swing: o.swing ?? (mode === 'window' ? 0.18 * maxDim : 0),
     tilt: o.tilt ?? (tiltDefaults ? 12 : 0),
     recoil: tiltDefaults ? -7 : 0,
     scaleCompensate: o.scaleCompensate ?? true,
@@ -62,12 +57,26 @@ function resolve(stage: HTMLElement, o: ReticuleOptions) {
 }
 
 /**
+ * Everything that scales with the container, re-derived on every pass. A
+ * container measured once is measured at whatever size it happened to have when
+ * it was wrapped - which for one in a hidden tab is no size at all.
+ */
+function sized(box: DOMRect, mode: Mode, o: ReticuleOptions) {
+  const maxDim = Math.max(box.width, box.height) || 640
+  return {
+    span: 0.4 * maxDim,
+    perspective: o.perspective ?? Math.min(1400, Math.max(700, 1.4 * maxDim)),
+    swing: o.swing ?? (mode === 'window' ? 0.18 * maxDim : 0),
+  }
+}
+
+/**
  * Turn `container` into a parallax window. Every element in its subtree becomes
  * a Z plane, ordered by `z-index` where it is set and document order where it
  * is not, and the whole stack swings with whatever is driving it.
  */
 export function reticulize(container: HTMLElement, options: ReticuleOptions & { deck?: HTMLElement } = {}): ReticuleHandle {
-  const cfg = resolve(container, options)
+  const cfg = resolve(options)
   if (options.injectStyles !== false) injectStyles(container.ownerDocument)
 
   const stage = container
@@ -91,8 +100,6 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
   let planes: Plane[] = []
 
   stage.classList.add('rz-stage', cfg.mode === 'window' ? 'rz-window' : 'rz-tilt')
-  stage.style.setProperty('--rz-perspective', `${Math.round(cfg.perspective)}px`)
-  stage.style.setProperty('--rz-swing', `${cfg.swing.toFixed(1)}px`)
   stage.style.setProperty('--rz-tilt', `${cfg.tilt}deg`)
   stage.style.setProperty('--rz-recoil', `${cfg.recoil}px`)
 
@@ -111,16 +118,21 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
 
   const apply = () => {
     clear()
-    const raws = collect(root, { falloff: cfg.falloff, maxDepth: cfg.maxDepth, fan: cfg.fan, skip: cfg.skip, lift: cfg.lift })
-    planes = fit(raws, cfg.span, cfg.origin, cfg.step)
-    const p = cfg.perspective
 
     // Read every rect before writing anything, so the loop costs one layout
     // rather than one per plane.
     const box = stage.getBoundingClientRect()
+    const dim = sized(box, cfg.mode, options)
+    const raws = collect(root, { falloff: cfg.falloff, maxDepth: cfg.maxDepth, fan: cfg.fan, skip: cfg.skip, lift: cfg.lift })
+    planes = fit(raws, dim.span, cfg.origin, cfg.step)
+    const p = dim.perspective
+
     const cx = box.left + box.width / 2
     const cy = box.top + box.height / 2
     const boxes = cfg.scaleCompensate ? planes.map((plane) => plane.el.getBoundingClientRect()) : []
+
+    stage.style.setProperty('--rz-perspective', `${Math.round(dim.perspective)}px`)
+    stage.style.setProperty('--rz-swing', `${dim.swing.toFixed(1)}px`)
 
     planes.forEach((plane, i) => {
       // A plane's own scale is applied to its descendants, so both its Z and

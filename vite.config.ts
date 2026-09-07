@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import dts from 'vite-plugin-dts'
 import { CSS } from './src/styles.js'
 
@@ -10,6 +10,11 @@ export default defineConfig({
       reticul8r: resolve(__dirname, 'src/index.ts'),
       'reticul8r/react': resolve(__dirname, 'src/react.ts'),
     },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
+    include: ['test/**/*.test.ts'],
   },
   build: {
     lib: {

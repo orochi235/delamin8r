@@ -50,14 +50,17 @@ export const CSS = `
 }
 `
 
-let injected = false
+const injected = new WeakSet<Document>()
 
 export function injectStyles(doc: Document = document): void {
-  if (injected) return
-  injected = true
-  if ('adoptedStyleSheets' in doc && typeof CSSStyleSheet !== 'undefined') {
+  if (injected.has(doc)) return
+  injected.add(doc)
+  // The sheet has to be constructed in the target document's own realm; one
+  // built here is rejected on adoption into an iframe.
+  const view = doc.defaultView
+  if (view && 'adoptedStyleSheets' in doc && typeof view.CSSStyleSheet !== 'undefined') {
     try {
-      const sheet = new CSSStyleSheet()
+      const sheet = new view.CSSStyleSheet()
       sheet.replaceSync(CSS)
       doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sheet]
       return

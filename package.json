@@ -2,35 +2,71 @@
   "name": "reticul8r",
   "version": "0.1.0",
   "description": "Turn a DOM subtree into a parallax window: the elements already in it become depth planes.",
+  "keywords": [
+    "parallax",
+    "depth",
+    "3d",
+    "perspective",
+    "tilt",
+    "pointer",
+    "accelerometer",
+    "dom",
+    "react"
+  ],
+  "homepage": "https://github.com/orochi235/reticul8r#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orochi235/reticul8r.git"
+  },
+  "bugs": "https://github.com/orochi235/reticul8r/issues",
+  "author": "orochi235 (https://github.com/orochi235)",
   "type": "module",
   "license": "MIT",
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "main": "./dist/reticul8r.js",
   "module": "./dist/reticul8r.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/reticul8r.js" },
-    "./react": { "types": "./dist/react.d.ts", "import": "./dist/react.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/reticul8r.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    },
     "./reticul8r.css": "./dist/reticul8r.css"
   },
-  "sideEffects": ["*.css"],
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.build.json && vite build",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "peerDependencies": {
     "react": ">=17"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true }
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
+    "jsdom": "^30.0.1",
     "react": "^19.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.0.0",
-    "vite-plugin-dts": "^4.3.0"
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^5.0.0"
   }
 }
