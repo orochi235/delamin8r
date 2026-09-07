@@ -1,5 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reticulize } from '../src/reticulize.js'
+import { setReducedMotion, setVisibility } from './setup.js'
+import type { Driver } from '../src/types.js'
+
+const frame = () => new Promise((r) => requestAnimationFrame(r))
 
 /** jsdom measures nothing, so a box has to be handed to the element. */
 function size(el: HTMLElement, width: number, height: number): void {
@@ -84,8 +88,112 @@ describe('reticulize', () => {
     const panel = mount('<span>a</span>')
     const handle = reticulize(panel, { driver: false })
     panel.appendChild(document.createElement('span'))
-    await new Promise((r) => requestAnimationFrame(r))
+    await frame()
     expect(handle.planes).toHaveLength(2)
+    handle.destroy()
+  })
+
+  it('re-places a plane when an attribute changes its depth', async () => {
+    const panel = mount('<span id="a">a</span>')
+    const handle = reticulize(panel, { driver: false, step: 10 })
+    expect(handle.planes[0]!.z).toBe(10)
+
+    // `.badge` carries a lift of 2.5 - nothing added or removed a node.
+    document.getElementById('a')!.className = 'badge'
+    await frame()
+    expect(handle.planes[0]!.z).toBe(35)
+    handle.destroy()
+  })
+
+  it('does not re-place itself while the frame loop is running', async () => {
+    const panel = mount('<span>a</span>')
+    const handle = reticulize(panel, { driver: false, ease: 0.1 })
+    const first = handle.planes
+    handle.set(1, 1)
+    for (let i = 0; i < 6; i++) await frame()
+    // A re-place swaps the array; the loop writing the stage's own style must
+    // not look like a content change.
+    expect(handle.planes).toBe(first)
+    handle.destroy()
+  })
+
+  it('reports what is flattening a plane, reading the DOM as it is now', () => {
+    const panel = mount('<div id="wrap"><span id="a">a</span></div>')
+    const handle = reticulize(panel, { driver: false })
+    expect(handle.diagnose()).toHaveLength(0)
+
+    document.getElementById('wrap')!.style.overflow = 'hidden'
+    const flat = handle.diagnose()
+    expect(flat).toHaveLength(1)
+    expect(flat[0]!.cause).toBe('overflow: hidden')
+    expect(handle.planes.find((p) => p.el.id === 'a')!.flattened).toBe(true)
+    handle.destroy()
+  })
+})
+
+describe('pausing off-screen', () => {
+  const spy = (): Driver & { started: number; stopped: number } => {
+    const d = { started: 0, stopped: 0, start: () => void d.started++, stop: () => void d.stopped++ }
+    return d
+  }
+
+  it('drops the driver when the container scrolls out of view', () => {
+    const panel = mount('<span>a</span>')
+    const driver = spy()
+    const handle = reticulize(panel, { driver })
+    expect(driver.started).toBe(1)
+
+    setVisibility(false)
+    expect(driver.stopped).toBe(1)
+
+    setVisibility(true)
+    expect(driver.started).toBe(2)
+    handle.destroy()
+  })
+
+  it('stays put when the option is off', () => {
+    const panel = mount('<span>a</span>')
+    const driver = spy()
+    const handle = reticulize(panel, { driver, pauseOffscreen: false })
+    setVisibility(false)
+    expect(driver.stopped).toBe(0)
+    handle.destroy()
+  })
+
+  it('lets go of the observer on destroy', () => {
+    const panel = mount('<span>a</span>')
+    const driver = spy()
+    reticulize(panel, { driver }).destroy()
+    const stoppedByDestroy = driver.stopped
+    setVisibility(false)
+    expect(driver.stopped).toBe(stoppedByDestroy)
+  })
+})
+
+describe('reduced motion', () => {
+  afterEach(() => setReducedMotion(false))
+
+  it('attaches no driver while it is on', () => {
+    setReducedMotion(true)
+    const panel = mount('<span>a</span>')
+    const start = vi.fn()
+    const handle = reticulize(panel, { driver: { start, stop() {} } })
+    expect(start).not.toHaveBeenCalled()
+    handle.destroy()
+  })
+
+  it('follows the setting being changed mid-session', () => {
+    const panel = mount('<span>a</span>')
+    const start = vi.fn()
+    const stop = vi.fn()
+    const handle = reticulize(panel, { driver: { start, stop } })
+    expect(start).toHaveBeenCalledOnce()
+
+    setReducedMotion(true)
+    expect(stop).toHaveBeenCalledOnce()
+
+    setReducedMotion(false)
+    expect(start).toHaveBeenCalledTimes(2)
     handle.destroy()
   })
 

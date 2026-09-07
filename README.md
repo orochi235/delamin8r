@@ -12,8 +12,9 @@ import { reticulize } from 'reticul8r'
 const handle = reticulize(document.querySelector('.panel'))
 ```
 
-That's the whole setup. The stylesheet injects itself, the pointer starts
-driving it, and `handle.destroy()` puts the DOM back exactly as it was.
+That's the whole setup. The stylesheet injects itself — into the container's
+shadow root if that is where it lives — the pointer starts driving it, and
+`handle.destroy()` puts the DOM back exactly as it was.
 
 React:
 
@@ -133,6 +134,7 @@ hard-coded: `--rz-px` and `--rz-py` are the deflection, ±1, and `--rz-mx` /
 | `lift` | replaces the semantic lift rules |
 | `driver` | `'auto'` (default: pointer and accelerometer fused), `'pointer'`, `'scroll'`, `'orientation'`, a custom `Driver`, or `false` |
 | `recenterOnLeave` | return to center when the pointer leaves — `true`. `false` tracks the whole window |
+| `pauseOffscreen` | drop the driver and leave the frame loop while the container is out of view — `true` |
 
 `scaleCompensate` scales each plane about the stage center — the same point the
 perspective projects from — so the two cancel exactly. A wrapped panel is

@@ -1,7 +1,7 @@
 import { collect, DEFAULT_LIFT, fit } from './depth.js'
 import { fuse, orientationDriver, orientationSupported, pointerDriver, requestOrientationPermission, scrollDriver } from './drivers.js'
 import { approach, join, leave, wake } from './loop.js'
-import { injectStyles } from './styles.js'
+import { injectStyles, styleRootFor } from './styles.js'
 import type { Driver, DriverName, Mode, Plane, ReticuleHandle, ReticuleOptions } from './types.js'
 
 const clamp = (n: number) => (n < -1 ? -1 : n > 1 ? 1 : n)
@@ -53,6 +53,7 @@ function resolve(o: ReticuleOptions) {
     skip: o.skip,
     lift: o.lift ?? DEFAULT_LIFT,
     recenterOnLeave: o.recenterOnLeave ?? true,
+    pauseOffscreen: o.pauseOffscreen ?? true,
   }
 }
 
@@ -77,7 +78,7 @@ function sized(box: DOMRect, mode: Mode, o: ReticuleOptions) {
  */
 export function reticulize(container: HTMLElement, options: ReticuleOptions & { deck?: HTMLElement } = {}): ReticuleHandle {
   const cfg = resolve(options)
-  if (options.injectStyles !== false) injectStyles(container.ownerDocument)
+  if (options.injectStyles !== false) injectStyles(styleRootFor(container))
 
   const stage = container
   let injectedDeck: HTMLElement | null = null
@@ -124,7 +125,14 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     const box = stage.getBoundingClientRect()
     const dim = sized(box, cfg.mode, options)
     const raws = collect(root, { falloff: cfg.falloff, maxDepth: cfg.maxDepth, fan: cfg.fan, skip: cfg.skip, lift: cfg.lift })
-    planes = fit(raws, dim.span, cfg.origin, cfg.step)
+    planes = fit(raws, dim.span, cfg.origin, cfg.step).map((placed) => ({
+      ...placed,
+      // Derived on demand: answering it walks the ancestors, and almost nobody
+      // asks. Reading it also picks up a style change made since this pass.
+      get flattened() {
+        return placed.level > 1 && flattener(placed.el) !== null
+      },
+    }))
     const p = dim.perspective
 
     const cx = box.left + box.width / 2
@@ -152,9 +160,10 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
       }
       plane.el.classList.add('rz-plane')
     })
-    for (const plane of planes) {
-      plane.flattened = plane.level > 1 && flattener(plane.el) !== null
-    }
+
+    // Everything above wrote to the subtree the observer is watching. Dropping
+    // the records it queued is what stops this scheduling itself forever.
+    observer.takeRecords()
   }
 
   /** The nearest ancestor between `el` and the stage that drops it out of 3D. */
@@ -162,7 +171,11 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     let node = el.parentElement
     while (node && node !== stage) {
       const style = getComputedStyle(node)
-      const hit = FLATTENERS.find(([prop, bad]) => bad(String(style[prop])))
+      const hit = FLATTENERS.find(([prop, bad]) => {
+        const value = String(style[prop])
+        // An engine that reports nothing for a property has not said it flattens.
+        return value !== '' && bad(value)
+      })
       if (hit) return { cause: `${String(hit[0])}: ${String(style[hit[0]])}`, culprit: node }
       node = node.parentElement
     }
@@ -225,7 +238,7 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     driver?.stop()
     driver = null
     spec = d
-    if (d === false || reduced.matches) return
+    if (d === false || reduced.matches || !onscreen) return
     driver = build(d)
     driver.start(ctx)
   }
@@ -240,14 +253,51 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
       apply()
     })
   }
-  const observer = new MutationObserver(schedule)
+
+  // Depth is decided as much by attributes as by structure - a class carrying a
+  // `z-index`, a `role`, an `href` - so watching `childList` alone leaves a
+  // plane at the wrong depth until something else happens to add a node.
+  const WATCHED = ['class', 'style', 'role', 'href', 'data-badge', 'data-rz-lift', 'data-rz-skip']
+
+  // The frame loop writes the deflection to the stage's own style. That is not
+  // a content change, and treating it as one would re-place every plane at
+  // 60Hz for as long as anything is moving.
+  const observer = new MutationObserver((records) => {
+    if (records.some((r) => r.target !== stage || r.attributeName !== 'style')) schedule()
+  })
   const resizer = new ResizeObserver(schedule)
+
+  // A panel scrolled out of view still holds a live pointer listener and a
+  // frame in the loop, neither of which anyone can see the result of.
+  let onscreen = true
+  const watcher =
+    cfg.pauseOffscreen && typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver((entries) => {
+          const visible = entries[entries.length - 1]?.isIntersecting ?? true
+          if (visible === onscreen) return
+          onscreen = visible
+          if (visible) {
+            join(tick)
+            attach(spec)
+          } else {
+            driver?.stop()
+            driver = null
+            leave(tick)
+          }
+        })
+      : null
 
   apply()
   join(tick)
-  observer.observe(root, { childList: true, subtree: true })
+  observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: WATCHED })
   resizer.observe(stage)
+  watcher?.observe(stage)
   attach(options.driver ?? 'auto')
+
+  // Reduced motion is a setting people change while the page is open, and the
+  // driver has to come and go with it - the stylesheet only mutes the result.
+  const onReducedChange = () => attach(spec)
+  reduced.addEventListener('change', onReducedChange)
 
   return {
     stage,
@@ -278,7 +328,7 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     diagnose() {
       const out: Array<{ el: HTMLElement; cause: string; culprit: HTMLElement }> = []
       for (const plane of planes) {
-        const hit = plane.flattened ? flattener(plane.el) : null
+        const hit = plane.level > 1 ? flattener(plane.el) : null
         if (hit) out.push({ el: plane.el, ...hit })
       }
       return out
@@ -286,6 +336,8 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     destroy() {
       observer.disconnect()
       resizer.disconnect()
+      watcher?.disconnect()
+      reduced.removeEventListener('change', onReducedChange)
       if (pending) cancelAnimationFrame(pending)
       driver?.stop()
       leave(tick)

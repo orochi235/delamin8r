@@ -1,5 +1,8 @@
 import type { LiftRule, Plane, ReticuleOptions } from './types.js'
 
+/** A plane's geometry, before anything has asked whether it renders at depth. */
+export type Placement = Omit<Plane, 'flattened'>
+
 export const DEFAULT_LIFT: LiftRule[] = [
   { match: 'button, [role="button"], a[href], input, select, textarea, summary', lift: 1.5 },
   { match: '[data-badge], .badge, mark, kbd, [role="status"]', lift: 2.5 },
@@ -91,7 +94,7 @@ export function collect(
  * whole stack rises in front of it; `origin` slides that fraction of the span
  * back behind the container, which only makes sense when it is transparent.
  */
-export function fit(raws: Raw[], span: number, origin: number, step: number | undefined): Plane[] {
+export function fit(raws: Raw[], span: number, origin: number, step: number | undefined): Placement[] {
   if (raws.length === 0) return []
   let hi = 0
   for (const r of raws) if (r.raw > hi) hi = r.raw
@@ -107,6 +110,5 @@ export function fit(raws: Raw[], span: number, origin: number, step: number | un
     // against a true zero however far `origin` slides the rest back.
     parentZ: r.level === 1 ? 0 : at(r.parentRaw),
     level: r.level,
-    flattened: false,
   }))
 }

@@ -43,6 +43,8 @@ export interface ReticuleOptions {
   driver?: DriverName | Driver | false
   /** Return the pointer to center when it leaves the container. */
   recenterOnLeave?: boolean
+  /** Detach the driver and leave the frame loop while the container is out of view. */
+  pauseOffscreen?: boolean
   injectStyles?: boolean
 }
 
@@ -72,8 +74,11 @@ export interface Plane {
   z: number
   parentZ: number
   level: number
-  /** True when an ancestor's own styles flatten 3D, so this plane will not render at depth. */
-  flattened: boolean
+  /**
+   * True when an ancestor's own styles flatten 3D, so this plane will not
+   * render at depth. Read off the live DOM at the moment you ask.
+   */
+  readonly flattened: boolean
 }
 
 export interface ReticuleHandle {

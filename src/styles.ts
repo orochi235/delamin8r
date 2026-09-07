@@ -50,19 +50,32 @@ export const CSS = `
 }
 `
 
-const injected = new WeakSet<Document>()
+/** Wherever a stylesheet can land: a document, or a shadow root that has to carry its own. */
+export type StyleRoot = Document | ShadowRoot
 
-export function injectStyles(doc: Document = document): void {
-  if (injected.has(doc)) return
-  injected.add(doc)
+const injected = new WeakSet<StyleRoot>()
+
+const asDocument = (root: StyleRoot): Document | null => (root.nodeType === 9 ? (root as Document) : null)
+
+/** The scope `el`'s styles resolve in, which for an element in a shadow tree is not its document. */
+export function styleRootFor(el: Element): StyleRoot {
+  const root = el.getRootNode()
+  if (root.nodeType === 9) return root as Document
+  return 'host' in root ? (root as ShadowRoot) : el.ownerDocument
+}
+
+export function injectStyles(root: StyleRoot = document): void {
+  if (injected.has(root)) return
+  injected.add(root)
+  const doc = asDocument(root) ?? (root as ShadowRoot).ownerDocument
   // The sheet has to be constructed in the target document's own realm; one
   // built here is rejected on adoption into an iframe.
   const view = doc.defaultView
-  if (view && 'adoptedStyleSheets' in doc && typeof view.CSSStyleSheet !== 'undefined') {
+  if (view && 'adoptedStyleSheets' in root && typeof view.CSSStyleSheet !== 'undefined') {
     try {
       const sheet = new view.CSSStyleSheet()
       sheet.replaceSync(CSS)
-      doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sheet]
+      root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet]
       return
     } catch {
       /* fall through to a style tag */
@@ -71,5 +84,5 @@ export function injectStyles(doc: Document = document): void {
   const tag = doc.createElement('style')
   tag.dataset.reticul8r = ''
   tag.textContent = CSS
-  doc.head.appendChild(tag)
+  ;(asDocument(root)?.head ?? root).appendChild(tag)
 }

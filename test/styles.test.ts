@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { CSS, injectStyles } from '../src/styles.js'
+import { CSS, injectStyles, styleRootFor } from '../src/styles.js'
+import { reticulize } from '../src/reticulize.js'
 
 const tag = (doc: Document) => doc.querySelector('style[data-reticul8r]')
 
@@ -28,5 +29,32 @@ describe('injectStyles', () => {
     const doc = blank()
     injectStyles(doc)
     expect(tag(doc)!.textContent).toBe(CSS)
+  })
+
+  it('puts the sheet in the shadow root, where the container can see it', () => {
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const shadow = host.attachShadow({ mode: 'open' })
+    shadow.innerHTML = '<div id="panel"><span>x</span></div>'
+
+    const handle = reticulize(shadow.getElementById('panel') as HTMLElement, { driver: false })
+    // Document styles do not cross the boundary, so a sheet left outside is a
+    // sheet the planes never get.
+    expect(shadow.querySelector('style[data-reticul8r]')).not.toBeNull()
+    handle.destroy()
+    host.remove()
+  })
+
+  it('resolves the scope an element actually takes its styles from', () => {
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const shadow = host.attachShadow({ mode: 'open' })
+    shadow.innerHTML = '<span id="inner"></span>'
+    expect(styleRootFor(shadow.getElementById('inner')!)).toBe(shadow)
+    expect(styleRootFor(host)).toBe(document)
+
+    // Not in a tree yet: the document it was made from is the best answer.
+    expect(styleRootFor(document.createElement('div'))).toBe(document)
+    host.remove()
   })
 })
