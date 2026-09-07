@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
 import dts from 'vite-plugin-dts'
 import { CSS } from './src/styles.js'
+import { highlight } from './site/highlight.js'
 
 export default defineConfig({
   resolve: {
@@ -24,6 +25,7 @@ export default defineConfig({
     rollupOptions: { external: ['react'] },
   },
   plugins: [
+    highlight(),
     dts({ include: ['src'], rollupTypes: false }),
     {
       name: 'delamin8r:emit-css',

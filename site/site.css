@@ -1,0 +1,1068 @@
+/*
+ * Nothing inside a delaminated region may carry overflow, opacity below 1,
+ * filter, clip-path, mask, mix-blend-mode, isolation or contain: each one
+ * silently drops the subtree out of 3D. Scrolling children carry data-dl-skip
+ * so their overflow has no planes under it.
+ */
+
+:root {
+  --ground: #08090b;
+  --plate: #0e1014;
+  --plate-lit: #13161c;
+  --ink: #e6e4dd;
+  --ink-dim: #99a0a9;
+  --ink-faint: #5d646d;
+  --line: #1c2128;
+  --line-lit: #2b333d;
+
+  /* The apparatus is cyan; the specimen under test is gold. */
+  --cyan: #99ffff;
+  --cyan-dim: #4d8a8a;
+  --gold: #ffd700;
+  --flat: #ff6b6b;
+
+  --display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --body: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --gutter: clamp(20px, 5vw, 64px);
+  --column: 1180px;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    repeating-linear-gradient(to right, rgb(153 255 255 / 0.028) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(to bottom, rgb(153 255 255 / 0.028) 0 1px, transparent 1px 34px),
+    radial-gradient(1200px 700px at 12% -10%, #12161d 0%, transparent 65%),
+    var(--ground);
+  color: var(--ink);
+  font: 400 15px/1.65 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--cyan);
+  text-decoration-color: rgb(153 255 255 / 0.35);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-color: var(--cyan);
+}
+
+code {
+  font: 500 0.88em/1.5 var(--mono);
+  color: var(--cyan);
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 10;
+  padding: 8px 14px;
+  background: var(--plate-lit);
+  border: 1px solid var(--cyan);
+}
+
+/* ---------------------------------------------------------------- bar */
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid var(--line);
+  background: rgb(8 9 11 / 0.92);
+}
+
+.bar__inner {
+  display: flex;
+  align-items: baseline;
+  gap: 40px;
+  max-width: var(--column);
+  margin: 0 auto;
+  padding: 18px var(--gutter) 16px;
+}
+
+.mark {
+  font: 400 30px/1 var(--display);
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.mark em {
+  font-style: italic;
+  color: var(--cyan);
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin-left: auto;
+}
+
+.nav a {
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+}
+
+.nav a:hover {
+  color: var(--ink);
+}
+
+.nav a[aria-current='page'] {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+/* ------------------------------------------------------------- layout */
+
+main {
+  max-width: var(--column);
+  margin: 0 auto;
+  padding: clamp(44px, 7vw, 88px) var(--gutter) 120px;
+  outline: none;
+}
+
+.lede {
+  max-width: 62ch;
+  font-size: 17px;
+  color: var(--ink-dim);
+}
+
+.prose {
+  max-width: 68ch;
+}
+
+.prose p {
+  margin: 0 0 18px;
+  color: var(--ink-dim);
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+h1 {
+  margin: 0 0 18px;
+  font: 400 clamp(44px, 7vw, 76px) / 0.98 var(--display);
+  letter-spacing: -0.015em;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--cyan);
+}
+
+h2 {
+  margin: 0 0 14px;
+  font: 400 clamp(28px, 3.6vw, 40px) / 1.06 var(--display);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  margin: 0 0 10px;
+  font: 600 15px/1.3 var(--body);
+  letter-spacing: 0.01em;
+}
+
+section {
+  margin-top: clamp(56px, 8vw, 104px);
+}
+
+/* The drafting label: an index, a name, then a rule to the edge. */
+.label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 22px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--cyan-dim);
+}
+
+.label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--line-lit), transparent);
+}
+
+.label b {
+  font-weight: 500;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------------------------- plate */
+
+.plate {
+  position: relative;
+  padding: 26px;
+  border: 1px solid var(--line);
+  background: linear-gradient(168deg, var(--plate-lit) 0%, var(--plate) 60%, #0a0c10 100%);
+}
+
+/* Drafting corner marks: two opposite Ls, not a full frame. */
+.plate::before,
+.plate::after {
+  content: '';
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 0 solid var(--cyan-dim);
+}
+
+.plate::before {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.plate::after {
+  right: -1px;
+  bottom: -1px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+
+.plate--wide {
+  margin-inline: calc(var(--gutter) / -2);
+}
+
+.grid2 {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
+}
+
+.stack {
+  display: grid;
+  gap: 22px;
+}
+
+/* --------------------------------------------------------- entrance */
+
+/*
+ * Flat on arrival, delaminated a frame later - a fade would have to animate
+ * opacity, which is one of the properties that flattens the subtree.
+ */
+@keyframes rise {
+  from {
+    translate: 0 14px;
+  }
+}
+
+.enter > * {
+  animation: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.enter > *:nth-child(2) { animation-delay: 0.05s; }
+.enter > *:nth-child(3) { animation-delay: 0.1s; }
+.enter > *:nth-child(4) { animation-delay: 0.15s; }
+.enter > *:nth-child(n + 5) { animation-delay: 0.2s; }
+
+/* ---------------------------------------------------------- controls */
+
+.controls {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.ctl {
+  display: grid;
+  grid-template-columns: 92px 1fr 52px;
+  align-items: center;
+  gap: 12px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.ctl--check {
+  grid-template-columns: auto 1fr;
+}
+
+.ctl output {
+  text-align: right;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.ctl input[type='range'] {
+  width: 100%;
+  accent-color: var(--cyan);
+}
+
+.ctl input[type='checkbox'] {
+  accent-color: var(--cyan);
+}
+
+.ctl select {
+  width: 100%;
+  padding: 5px 7px;
+  border: 1px solid var(--line-lit);
+  background: #0b0d11;
+  color: var(--ink);
+  font: 500 11px/1.3 var(--mono);
+}
+
+.push {
+  padding: 8px 15px;
+  border: 1px solid var(--line-lit);
+  background: #14181f;
+  color: var(--ink);
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.push:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.push[aria-pressed='true'] {
+  border-color: var(--cyan);
+  background: #10222a;
+  color: var(--cyan);
+}
+
+.push-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* -------------------------------------------------------------- code */
+
+.code {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: #0a0c10;
+}
+
+.code pre {
+  margin: 0;
+  padding: 16px 18px;
+  font: 400 12.5px/1.75 var(--mono);
+}
+
+.code__cap {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--line);
+  font: 500 9px/1.4 var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* The live call a lab currently represents. */
+.snip {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--cyan-dim);
+  background: #0a0c10;
+  font: 400 12.5px/1.7 var(--mono);
+  color: var(--ink-dim);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.snip .k { color: #a6b7ff; }
+.snip .f { color: var(--cyan); }
+.snip .n { color: var(--gold); font-variant-numeric: tabular-nums; }
+.snip .s { color: #a8e6a0; }
+.snip .p { color: var(--ink-faint); }
+
+/* --------------------------------------------------------- inspector */
+
+.planes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 400 11.5px/1.85 var(--mono);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.planes li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  padding: 0 4px;
+  color: var(--ink-faint);
+  white-space: pre;
+  cursor: default;
+}
+
+.planes li:hover,
+.planes li[data-hot='1'] {
+  background: #141a20;
+  color: var(--ink);
+}
+
+.planes b {
+  font-weight: 400;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.planes .is-flat,
+.planes .is-flat b {
+  color: var(--flat);
+}
+
+.readout {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-left: 2px solid var(--cyan-dim);
+  background: #0c0f13;
+  font: 500 10px/1.5 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.readout--bad {
+  border-left-color: var(--flat);
+  color: var(--flat);
+}
+
+.readout b {
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.readout--bad b {
+  color: var(--flat);
+}
+
+/* The element a hovered plane row points at. */
+.spot {
+  outline: 1px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------- specimen */
+
+.stagewrap {
+  width: min(440px, 100%);
+}
+
+.card {
+  position: relative;
+  padding: 24px 26px 22px;
+  border: 1px solid #262a33;
+  border-radius: 12px;
+  background: linear-gradient(165deg, #171a22 0%, #101219 55%, #0c0e14 100%);
+  box-shadow: 0 40px 90px -40px #000;
+}
+
+.card__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: radial-gradient(360px circle at var(--dl-mx, 50%) var(--dl-my, 50%), rgb(255 215 0 / 0.13), transparent 70%);
+  pointer-events: none;
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card__title {
+  margin: 0;
+  font: 600 18px/1.2 var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.badge {
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 3px;
+  border: 1px solid rgb(255 215 0 / 0.5);
+  background: rgb(255 215 0 / 0.16);
+  color: var(--gold);
+  font: 700 9px/1.5 var(--mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.card__lede {
+  margin: 0 0 16px;
+  color: #b9bcc6;
+  font-size: 13.5px;
+}
+
+.rows {
+  margin: 0 0 18px;
+  display: grid;
+  gap: 3px;
+  border-top: 1px solid #262a33;
+  padding-top: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: baseline;
+  color: #7d8391;
+  font: 400 11px/1.7 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.row__val {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.card__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  padding: 7px 14px;
+  border-radius: 4px;
+  border: 1px solid #262a33;
+  background: #1b1f28;
+  color: var(--ink);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.btn--go {
+  border-color: rgb(255 215 0 / 0.55);
+  color: var(--gold);
+}
+
+.btn:hover {
+  border-color: var(--gold);
+}
+
+/* ---------------------------------------------------------- tables */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  padding: 9px 14px 9px 0;
+  border-bottom: 1px solid var(--line-lit);
+  font: 500 9px/1.4 var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cyan-dim);
+}
+
+td {
+  padding: 11px 14px 11px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-dim);
+  vertical-align: top;
+}
+
+td:first-child {
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+td code {
+  color: var(--cyan);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------- footer */
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding: 26px var(--gutter) 60px;
+}
+
+.foot p {
+  max-width: var(--column);
+  margin: 0 auto;
+  font: 400 12px/1.7 var(--mono);
+  color: var(--ink-faint);
+}
+
+/* ------------------------------------------------------------- misc */
+
+.note {
+  margin: 18px 0 0;
+  padding-left: 14px;
+  border-left: 2px solid var(--line-lit);
+  color: var(--ink-faint);
+  font-size: 13.5px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--line-lit);
+  font: 500 9px/1.4 var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.tag--on {
+  border-color: var(--cyan-dim);
+  color: var(--cyan);
+}
+
+.tag--bad {
+  border-color: var(--flat);
+  color: var(--flat);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter > * {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------ utility */
+
+.spaced {
+  margin-top: 36px;
+}
+
+.tagged {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.plate--link {
+  display: block;
+  text-decoration: none;
+}
+
+.plate--link h3 {
+  color: var(--ink);
+}
+
+.plate--link:hover {
+  border-color: var(--line-lit);
+}
+
+.plate--link:hover h3 {
+  color: var(--cyan);
+}
+
+.blurb {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 13.5px;
+}
+
+/* ------------------------------------------------- flattening lab */
+
+/*
+ * Each of these is a way to lose 3D silently. They go on a wrapper between the
+ * stage and its planes, which is exactly where a real one would land.
+ */
+.f-overflow { overflow: hidden; }
+.f-opacity { opacity: 0.99; }
+.f-filter { filter: saturate(1.05); }
+.f-contain { contain: paint; }
+.f-blend { mix-blend-mode: multiply; }
+.f-isolation { isolation: isolate; }
+.f-clip { clip-path: inset(0); }
+
+.wrapbox {
+  padding: 14px;
+  border: 1px dashed var(--line-lit);
+}
+
+/* --------------------------------------------------------- recipes */
+
+.rc {
+  display: grid;
+  place-items: center;
+  min-height: 210px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: #0a0c10;
+}
+
+.rc-card {
+  width: 250px;
+  padding: 18px;
+  border: 1px solid #2a303a;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #191d26, #0e1116);
+}
+
+.rc-card h4 {
+  margin: 0 0 6px;
+  font: 600 14px/1.3 var(--body);
+}
+
+.rc-card p {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+.rc-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: radial-gradient(300px circle at var(--dl-mx, 50%) var(--dl-my, 50%), rgb(153 255 255 / 0.16), transparent 65%);
+  pointer-events: none;
+}
+
+.rc-sheenwrap {
+  position: relative;
+}
+
+.rc-list {
+  width: 250px;
+  display: grid;
+  gap: 6px;
+}
+
+.rc-list div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  padding: 7px 11px;
+  border: 1px solid #262c36;
+  border-radius: 5px;
+  background: #12161d;
+  font: 400 11.5px/1.5 var(--mono);
+  color: var(--ink-dim);
+}
+
+.rc-list b {
+  color: var(--cyan);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.rc-dialog {
+  width: 270px;
+  padding: 20px;
+  border: 1px solid #2a303a;
+  border-radius: 12px;
+  background: #12161d;
+  box-shadow: 0 50px 100px -50px #000;
+}
+
+.rc-dialog h4 {
+  margin: 0 0 8px;
+  font: 400 24px/1.1 var(--display);
+}
+
+.rc-dialog p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.rc-band {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  place-items: center;
+  padding: 26px 0;
+}
+
+.rc-band h4 {
+  margin: 0;
+  font: 400 34px/1 var(--display);
+  color: var(--ink);
+}
+
+.rc-band span {
+  font: 500 9px/1 var(--mono);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cyan-dim);
+}
+
+.rc-text {
+  width: 280px;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+
+.rc-text h4 {
+  margin: 0 0 8px;
+  font: 600 13px/1.3 var(--body);
+  color: var(--ink);
+}
+
+.rc-text p {
+  margin: 0 0 10px;
+}
+
+.recipe {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(280px, 340px) 1fr;
+  align-items: start;
+}
+
+@media (max-width: 780px) {
+  .recipe {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------- showcase */
+
+.show {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  padding: 30px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(500px 300px at 50% 0%, #141922 0%, transparent 70%),
+    #090b0f;
+}
+
+/* now playing */
+
+.np {
+  width: 280px;
+  padding: 16px;
+  border: 1px solid #2b323d;
+  border-radius: 14px;
+  background: linear-gradient(158deg, #1c212c, #0d1015);
+  box-shadow: 0 46px 90px -46px #000;
+}
+
+.np-art {
+  height: 132px;
+  border-radius: 9px;
+  background:
+    radial-gradient(120px circle at 28% 26%, #ffd700, transparent 62%),
+    radial-gradient(150px circle at 76% 70%, #99ffff, transparent 60%),
+    linear-gradient(140deg, #3a2f5e, #10131a);
+}
+
+.np-meta {
+  display: grid;
+  gap: 3px;
+  margin: 14px 0 12px;
+}
+
+.np-meta strong {
+  font: 600 15px/1.25 var(--body);
+}
+
+.np-meta span {
+  font: 500 9px/1.4 var(--mono);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.np-wave {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 30px;
+  margin-bottom: 14px;
+}
+
+.np-wave i {
+  flex: 1;
+  border-radius: 1px;
+  background: linear-gradient(to top, var(--cyan-dim), var(--cyan));
+}
+
+.np-keys {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font: 400 15px/1 var(--mono);
+  color: var(--ink-dim);
+}
+
+/* terminal */
+
+.tty {
+  width: 400px;
+  border: 1px solid #2b323d;
+  border-radius: 9px;
+  background: #0b0e13;
+  box-shadow: 0 46px 90px -46px #000;
+}
+
+.tty-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 13px;
+  border-bottom: 1px solid #1d232c;
+}
+
+.tty-bar i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2e3742;
+}
+
+.tty-bar span {
+  margin-left: 8px;
+  font: 500 9px/1 var(--mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.tty-body {
+  padding: 14px 15px 18px;
+  font: 400 12px/1.85 var(--mono);
+  color: var(--ink-dim);
+}
+
+.tty-body div b {
+  color: var(--cyan);
+  font-weight: 400;
+}
+
+.tty-body div em {
+  color: var(--gold);
+  font-style: normal;
+}
+
+/* boarding pass */
+
+.pass {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  border: 1px solid #2b323d;
+  border-radius: 12px;
+  background: linear-gradient(150deg, #191d26, #0c0f14);
+  box-shadow: 0 46px 90px -46px #000;
+}
+
+.pass-main {
+  padding: 20px 22px;
+}
+
+.pass-route {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pass-route strong {
+  font: 400 40px/1 var(--display);
+  letter-spacing: 0.02em;
+}
+
+.pass-route span {
+  color: var(--cyan);
+  font: 400 16px/1 var(--mono);
+}
+
+.pass-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.pass-grid p {
+  margin: 0;
+  display: grid;
+  gap: 3px;
+  font: 400 12px/1.4 var(--mono);
+  color: var(--ink);
+}
+
+.pass-grid p span {
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.pass-stub {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  width: 76px;
+  padding: 18px 0;
+  border-left: 1px dashed #333b47;
+}
+
+.pass-stub b {
+  writing-mode: vertical-rl;
+  font: 500 9px/1 var(--mono);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.pass-stub em {
+  font: 400 22px/1 var(--display);
+  font-style: italic;
+  color: var(--gold);
+}
+
+/*
+ * A bare wrapper, because tilt injects a deck when the container has more than
+ * one child - and an injected block child collapses .pass's two columns.
+ */
+.pass-stage {
+  width: 400px;
+}
+
+.pass {
+  width: 100%;
+}

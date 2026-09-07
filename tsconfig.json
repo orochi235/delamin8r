@@ -15,5 +15,5 @@
     "verbatimModuleSyntax": true,
     "paths": { "delamin8r": ["./src/index.ts"], "delamin8r/react": ["./src/react.ts"] }
   },
-  "include": ["src", "demo", "test"]
+  "include": ["src", "site", "test", "vite.config.ts"]
 }

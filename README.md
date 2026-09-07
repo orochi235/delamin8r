@@ -140,17 +140,21 @@ hard-coded: `--dl-px` and `--dl-py` are the deflection, ±1, and `--dl-mx` /
 perspective projects from — so the two cancel exactly. A wrapped panel is
 pixel-identical to an unwrapped one until something moves.
 
-## Running the demo
+## The site
 
 ```
 npm install && npm run dev
 ```
 
-Two copies of the same card side by side, one wrapped, with the plane list and
-the flattening diagnostic live in the panel.
+A documentation site whose own chrome is delaminated, so every page demonstrates
+what it is describing. It carries the depth inspector, a lab that breaks the
+effect on purpose to show what `diagnose()` reports, window and tilt side by
+side, and recipes whose code blocks are read out of the running modules at build
+time. `npm run build:site` emits it to `site/dist`.
 
-`npm test` runs the suite: the depth rules, the easing, the driver handover, and
-that `destroy()` leaves the DOM as it found it.
+`npm test` runs the suite: the depth rules, the easing, the driver handover,
+that `destroy()` leaves the DOM as it found it, and that every page of the site
+tears its handles down.
 
 ## Where it came from
 
