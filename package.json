@@ -1,5 +1,5 @@
 {
-  "name": "reticul8r",
+  "name": "delamin8r",
   "version": "0.1.0",
   "description": "Turn a DOM subtree into a parallax window: the elements already in it become depth planes.",
   "keywords": [
@@ -13,12 +13,12 @@
     "dom",
     "react"
   ],
-  "homepage": "https://github.com/orochi235/reticul8r#readme",
+  "homepage": "https://github.com/orochi235/delamin8r#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/orochi235/reticul8r.git"
+    "url": "git+https://github.com/orochi235/delamin8r.git"
   },
-  "bugs": "https://github.com/orochi235/reticul8r/issues",
+  "bugs": "https://github.com/orochi235/delamin8r/issues",
   "author": "orochi235 (https://github.com/orochi235)",
   "type": "module",
   "license": "MIT",
@@ -27,19 +27,19 @@
     "README.md",
     "LICENSE"
   ],
-  "main": "./dist/reticul8r.js",
-  "module": "./dist/reticul8r.js",
+  "main": "./dist/delamin8r.js",
+  "module": "./dist/delamin8r.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/reticul8r.js"
+      "import": "./dist/delamin8r.js"
     },
     "./react": {
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js"
     },
-    "./reticul8r.css": "./dist/reticul8r.css"
+    "./delamin8r.css": "./dist/delamin8r.css"
   },
   "sideEffects": [
     "*.css"

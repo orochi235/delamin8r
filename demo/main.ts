@@ -1,8 +1,8 @@
-import { reticulize } from 'reticul8r'
-import type { DriverName, ReticuleHandle } from 'reticul8r'
+import { delaminate } from 'delamin8r'
+import type { DriverName, DelaminateHandle } from 'delamin8r'
 
 const CARD = `
-  <div class="card__sheen" data-rz-skip></div>
+  <div class="card__sheen" data-dl-skip></div>
   <div class="card__head">
     <h3 class="card__title">deploy 4f2a91c</h3>
     <span class="badge">staged</span>
@@ -25,7 +25,7 @@ const CARD = `
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 const cls = (el: HTMLElement) => {
-  const first = String(el.className).split(' ').filter((c) => c && !c.startsWith('rz-'))[0]
+  const first = String(el.className).split(' ').filter((c) => c && !c.startsWith('dl-'))[0]
   return first ? `.${first}` : ''
 }
 
@@ -34,11 +34,11 @@ const subject = $('subject')
 control.innerHTML = CARD
 ;(subject.firstElementChild as HTMLElement).innerHTML = CARD
 
-let handle: ReticuleHandle | null = null
+let handle: DelaminateHandle | null = null
 
 function build() {
   handle?.destroy()
-  handle = reticulize(subject, {
+  handle = delaminate(subject, {
     mode: ($('mode') as HTMLSelectElement).value as 'window' | 'tilt',
     origin: Number(($('origin') as HTMLInputElement).value),
     falloff: Number(($('falloff') as HTMLInputElement).value),

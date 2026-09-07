@@ -1,52 +1,52 @@
 /**
- * The single source for the stylesheet. `dist/reticul8r.css` is emitted from
+ * The single source for the stylesheet. `dist/delamin8r.css` is emitted from
  * this at build time for consumers who would rather import it themselves.
  */
 export const CSS = `
-@property --rz-px { syntax: "<number>"; inherits: true; initial-value: 0; }
-@property --rz-py { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --dl-px { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --dl-py { syntax: "<number>"; inherits: true; initial-value: 0; }
 
-.rz-stage {
-  --rz-mx: 50%;
-  --rz-my: 50%;
-  --rz-perspective: 900px;
-  --rz-swing: 0px;
-  --rz-tilt: 0deg;
-  --rz-tilt-x: calc(var(--rz-tilt) * 0.72);
-  --rz-recoil: 0px;
-  perspective: var(--rz-perspective);
+.dl-stage {
+  --dl-mx: 50%;
+  --dl-my: 50%;
+  --dl-perspective: 900px;
+  --dl-swing: 0px;
+  --dl-tilt: 0deg;
+  --dl-tilt-x: calc(var(--dl-tilt) * 0.72);
+  --dl-recoil: 0px;
+  perspective: var(--dl-perspective);
 }
 
-.rz-stage.rz-window {
+.dl-stage.dl-window {
   perspective-origin:
-    calc(50% + var(--rz-px) * var(--rz-swing))
-    calc(50% + var(--rz-py) * var(--rz-swing));
+    calc(50% + var(--dl-px) * var(--dl-swing))
+    calc(50% + var(--dl-py) * var(--dl-swing));
 }
 
-.rz-deck {
+.dl-deck {
   transform-style: preserve-3d;
   transform:
-    rotateX(calc(var(--rz-py) * -1 * var(--rz-tilt-x)))
-    rotateY(calc(var(--rz-px) * var(--rz-tilt)))
-    translate3d(calc(var(--rz-px) * var(--rz-recoil)), calc(var(--rz-py) * var(--rz-recoil)), 0);
+    rotateX(calc(var(--dl-py) * -1 * var(--dl-tilt-x)))
+    rotateY(calc(var(--dl-px) * var(--dl-tilt)))
+    translate3d(calc(var(--dl-px) * var(--dl-recoil)), calc(var(--dl-py) * var(--dl-recoil)), 0);
 }
 
-.rz-plane {
+.dl-plane {
   transform-style: preserve-3d;
   translate:
-    calc(var(--rz-px) * var(--rz-d, 0px))
-    calc(var(--rz-py) * var(--rz-d, 0px))
-    var(--rz-z, 0px);
-  scale: var(--rz-s, 1);
-  transform-origin: var(--rz-o, 50% 50%);
+    calc(var(--dl-px) * var(--dl-d, 0px))
+    calc(var(--dl-py) * var(--dl-d, 0px))
+    var(--dl-z, 0px);
+  scale: var(--dl-s, 1);
+  transform-origin: var(--dl-o, 50% 50%);
 }
 
 /* The Z offsets stay - they are the layout, not the motion. What goes is the
    pointer response. */
 @media (prefers-reduced-motion: reduce) {
-  .rz-stage.rz-window { perspective-origin: 50% 50%; }
-  .rz-deck { transform: none; }
-  .rz-plane { translate: 0 0 var(--rz-z, 0px); }
+  .dl-stage.dl-window { perspective-origin: 50% 50%; }
+  .dl-deck { transform: none; }
+  .dl-plane { translate: 0 0 var(--dl-z, 0px); }
 }
 `
 
@@ -82,7 +82,7 @@ export function injectStyles(root: StyleRoot = document): void {
     }
   }
   const tag = doc.createElement('style')
-  tag.dataset.reticul8r = ''
+  tag.dataset.delamin8r = ''
   tag.textContent = CSS
   ;(asDocument(root)?.head ?? root).appendChild(tag)
 }

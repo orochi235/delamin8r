@@ -6,7 +6,7 @@ export interface LiftRule {
   lift: number
 }
 
-export interface ReticuleOptions {
+export interface DelaminateOptions {
   /**
    * `window` moves `perspective-origin` and rotates nothing, so the container
    * you pass is the whole apparatus. `tilt` rotates an inner deck, which means
@@ -81,7 +81,7 @@ export interface Plane {
   readonly flattened: boolean
 }
 
-export interface ReticuleHandle {
+export interface DelaminateHandle {
   readonly stage: HTMLElement
   readonly planes: readonly Plane[]
   /** Re-read the subtree. Call after the content changes. */

@@ -13,7 +13,7 @@
     "noEmit": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "paths": { "reticul8r": ["./src/index.ts"], "reticul8r/react": ["./src/react.ts"] }
+    "paths": { "delamin8r": ["./src/index.ts"], "delamin8r/react": ["./src/react.ts"] }
   },
   "include": ["src", "demo", "test"]
 }

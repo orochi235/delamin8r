@@ -1,21 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { reticulize } from './reticulize.js'
-import type { DriverName, Driver, ReticuleHandle, ReticuleOptions } from './types.js'
+import { delaminate } from './delaminate.js'
+import type { DriverName, Driver, DelaminateHandle, DelaminateOptions } from './types.js'
 
-export interface UseReticule<T extends HTMLElement> {
+export interface UseDelaminate<T extends HTMLElement> {
   /** Put this on the container you want to become the parallax window. */
   ref: (node: T | null) => void
-  handle: ReticuleHandle | null
+  handle: DelaminateHandle | null
   enableOrientation: () => Promise<boolean>
   setDriver: (driver: DriverName | Driver | false) => void
 }
 
 /**
- * A thin wrapper over `reticulize`. Options are read once when the container
+ * A thin wrapper over `delaminate`. Options are read once when the container
  * mounts; change the `key` on the container to rebuild with new ones.
  */
-export function useReticule<T extends HTMLElement = HTMLDivElement>(options: ReticuleOptions = {}): UseReticule<T> {
-  const [handle, setHandle] = useState<ReticuleHandle | null>(null)
+export function useDelaminate<T extends HTMLElement = HTMLDivElement>(options: DelaminateOptions = {}): UseDelaminate<T> {
+  const [handle, setHandle] = useState<DelaminateHandle | null>(null)
   const opts = useRef(options)
   opts.current = options
 
@@ -24,7 +24,7 @@ export function useReticule<T extends HTMLElement = HTMLDivElement>(options: Ret
       setHandle(null)
       return
     }
-    setHandle(reticulize(node, opts.current))
+    setHandle(delaminate(node, opts.current))
   }, [])
 
   useEffect(() => () => handle?.destroy(), [handle])

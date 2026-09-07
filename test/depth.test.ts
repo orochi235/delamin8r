@@ -50,8 +50,8 @@ describe('collect', () => {
     expect(z).toEqual({ a: 1, b: 3, c: 2 })
   })
 
-  it('honors data-rz-lift, in preference to a matching rule', () => {
-    const z = raws(tree('<button id="a" data-rz-lift="4"></button>'), { lift: DEFAULT_LIFT })
+  it('honors data-dl-lift, in preference to a matching rule', () => {
+    const z = raws(tree('<button id="a" data-dl-lift="4"></button>'), { lift: DEFAULT_LIFT })
     expect(z).toEqual({ a: 5 })
   })
 
@@ -66,7 +66,7 @@ describe('collect', () => {
   })
 
   it('skips a marked element and everything under it', () => {
-    const z = raws(tree('<div id="a" data-rz-skip><div id="b"></div></div><div id="c"></div>'))
+    const z = raws(tree('<div id="a" data-dl-skip><div id="b"></div></div><div id="c"></div>'))
     expect(z).toEqual({ c: 1 })
   })
 

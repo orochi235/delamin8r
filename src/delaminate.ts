@@ -2,7 +2,7 @@ import { collect, DEFAULT_LIFT, fit } from './depth.js'
 import { fuse, orientationDriver, orientationSupported, pointerDriver, requestOrientationPermission, scrollDriver } from './drivers.js'
 import { approach, join, leave, wake } from './loop.js'
 import { injectStyles, styleRootFor } from './styles.js'
-import type { Driver, DriverName, Mode, Plane, ReticuleHandle, ReticuleOptions } from './types.js'
+import type { Driver, DriverName, Mode, Plane, DelaminateHandle, DelaminateOptions } from './types.js'
 
 const clamp = (n: number) => (n < -1 ? -1 : n > 1 ? 1 : n)
 
@@ -29,7 +29,7 @@ const FLATTENERS: Array<[keyof CSSStyleDeclaration, (v: string) => boolean]> = [
   ['contain', (v) => /paint|layout|strict|content/.test(v)],
 ]
 
-function resolve(o: ReticuleOptions) {
+function resolve(o: DelaminateOptions) {
   const mode = o.mode ?? 'window'
   const tiltDefaults = mode === 'tilt'
   return {
@@ -62,7 +62,7 @@ function resolve(o: ReticuleOptions) {
  * container measured once is measured at whatever size it happened to have when
  * it was wrapped - which for one in a hidden tab is no size at all.
  */
-function sized(box: DOMRect, mode: Mode, o: ReticuleOptions) {
+function sized(box: DOMRect, mode: Mode, o: DelaminateOptions) {
   const maxDim = Math.max(box.width, box.height) || 640
   return {
     span: 0.4 * maxDim,
@@ -76,7 +76,7 @@ function sized(box: DOMRect, mode: Mode, o: ReticuleOptions) {
  * a Z plane, ordered by `z-index` where it is set and document order where it
  * is not, and the whole stack swings with whatever is driving it.
  */
-export function reticulize(container: HTMLElement, options: ReticuleOptions & { deck?: HTMLElement } = {}): ReticuleHandle {
+export function delaminate(container: HTMLElement, options: DelaminateOptions & { deck?: HTMLElement } = {}): DelaminateHandle {
   const cfg = resolve(options)
   if (options.injectStyles !== false) injectStyles(styleRootFor(container))
 
@@ -89,28 +89,28 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     deck = options.deck ?? (only instanceof HTMLElement ? only : null)
     if (!deck) {
       injectedDeck = stage.ownerDocument.createElement('div')
-      injectedDeck.dataset.rzDeck = ''
+      injectedDeck.dataset.dlDeck = ''
       while (stage.firstChild) injectedDeck.appendChild(stage.firstChild)
       stage.appendChild(injectedDeck)
       deck = injectedDeck
     }
-    deck.classList.add('rz-deck')
+    deck.classList.add('dl-deck')
   }
 
   const root = deck ?? stage
   let planes: Plane[] = []
 
-  stage.classList.add('rz-stage', cfg.mode === 'window' ? 'rz-window' : 'rz-tilt')
-  stage.style.setProperty('--rz-tilt', `${cfg.tilt}deg`)
-  stage.style.setProperty('--rz-recoil', `${cfg.recoil}px`)
+  stage.classList.add('dl-stage', cfg.mode === 'window' ? 'dl-window' : 'dl-tilt')
+  stage.style.setProperty('--dl-tilt', `${cfg.tilt}deg`)
+  stage.style.setProperty('--dl-recoil', `${cfg.recoil}px`)
 
   const clear = () => {
     for (const p of planes) {
-      p.el.classList.remove('rz-plane')
-      p.el.style.removeProperty('--rz-z')
-      p.el.style.removeProperty('--rz-s')
-      p.el.style.removeProperty('--rz-d')
-      p.el.style.removeProperty('--rz-o')
+      p.el.classList.remove('dl-plane')
+      p.el.style.removeProperty('--dl-z')
+      p.el.style.removeProperty('--dl-s')
+      p.el.style.removeProperty('--dl-d')
+      p.el.style.removeProperty('--dl-o')
       tidy(p.el)
     }
   }
@@ -139,8 +139,8 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     const cy = box.top + box.height / 2
     const boxes = cfg.scaleCompensate ? planes.map((plane) => plane.el.getBoundingClientRect()) : []
 
-    stage.style.setProperty('--rz-perspective', `${Math.round(dim.perspective)}px`)
-    stage.style.setProperty('--rz-swing', `${dim.swing.toFixed(1)}px`)
+    stage.style.setProperty('--dl-perspective', `${Math.round(dim.perspective)}px`)
+    stage.style.setProperty('--dl-swing', `${dim.swing.toFixed(1)}px`)
 
     planes.forEach((plane, i) => {
       // A plane's own scale is applied to its descendants, so both its Z and
@@ -148,17 +148,17 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
       const parentScale = cfg.scaleCompensate ? 1 - plane.parentZ / p : 1
       const localZ = (plane.z - plane.parentZ) / parentScale
       const localDrift = (driftAt(plane.z) - driftAt(plane.parentZ)) / parentScale
-      plane.el.style.setProperty('--rz-z', `${localZ.toFixed(2)}px`)
-      plane.el.style.setProperty('--rz-d', `${localDrift.toFixed(2)}px`)
+      plane.el.style.setProperty('--dl-z', `${localZ.toFixed(2)}px`)
+      plane.el.style.setProperty('--dl-d', `${localDrift.toFixed(2)}px`)
       if (cfg.scaleCompensate) {
         // Scaling about the stage center - the same point perspective projects
         // from - cancels the magnification in position as well as in size, so
         // a wrapped panel is identical until something actually moves.
         const r = boxes[i]!
-        plane.el.style.setProperty('--rz-s', ((1 - plane.z / p) / (1 - plane.parentZ / p)).toFixed(5))
-        plane.el.style.setProperty('--rz-o', `${(cx - r.left).toFixed(1)}px ${(cy - r.top).toFixed(1)}px`)
+        plane.el.style.setProperty('--dl-s', ((1 - plane.z / p) / (1 - plane.parentZ / p)).toFixed(5))
+        plane.el.style.setProperty('--dl-o', `${(cx - r.left).toFixed(1)}px ${(cy - r.top).toFixed(1)}px`)
       }
-      plane.el.classList.add('rz-plane')
+      plane.el.classList.add('dl-plane')
     })
 
     // Everything above wrote to the subtree the observer is watching. Dropping
@@ -192,10 +192,10 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
     now.y = approach(now.y, target.y, cfg.ease, dt)
     now.mx = approach(now.mx, target.mx, cfg.ease, dt)
     now.my = approach(now.my, target.my, cfg.ease, dt)
-    stage.style.setProperty('--rz-px', now.x.toFixed(4))
-    stage.style.setProperty('--rz-py', now.y.toFixed(4))
-    stage.style.setProperty('--rz-mx', `${now.mx.toFixed(2)}%`)
-    stage.style.setProperty('--rz-my', `${now.my.toFixed(2)}%`)
+    stage.style.setProperty('--dl-px', now.x.toFixed(4))
+    stage.style.setProperty('--dl-py', now.y.toFixed(4))
+    stage.style.setProperty('--dl-mx', `${now.mx.toFixed(2)}%`)
+    stage.style.setProperty('--dl-my', `${now.my.toFixed(2)}%`)
     return (
       Math.abs(now.x - target.x) > 1e-4 ||
       Math.abs(now.y - target.y) > 1e-4 ||
@@ -257,7 +257,7 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
   // Depth is decided as much by attributes as by structure - a class carrying a
   // `z-index`, a `role`, an `href` - so watching `childList` alone leaves a
   // plane at the wrong depth until something else happens to add a node.
-  const WATCHED = ['class', 'style', 'role', 'href', 'data-badge', 'data-rz-lift', 'data-rz-skip']
+  const WATCHED = ['class', 'style', 'role', 'href', 'data-badge', 'data-dl-lift', 'data-dl-skip']
 
   // The frame loop writes the deflection to the stage's own style. That is not
   // a content change, and treating it as one would re-place every plane at
@@ -343,13 +343,13 @@ export function reticulize(container: HTMLElement, options: ReticuleOptions & { 
       leave(tick)
       clear()
       planes = []
-      stage.classList.remove('rz-stage', 'rz-window', 'rz-tilt')
-      for (const prop of ['--rz-perspective', '--rz-swing', '--rz-tilt', '--rz-recoil', '--rz-px', '--rz-py', '--rz-mx', '--rz-my']) {
+      stage.classList.remove('dl-stage', 'dl-window', 'dl-tilt')
+      for (const prop of ['--dl-perspective', '--dl-swing', '--dl-tilt', '--dl-recoil', '--dl-px', '--dl-py', '--dl-mx', '--dl-my']) {
         stage.style.removeProperty(prop)
       }
       tidy(stage)
       if (deck) {
-        deck.classList.remove('rz-deck')
+        deck.classList.remove('dl-deck')
         tidy(deck)
       }
       if (injectedDeck) {

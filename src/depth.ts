@@ -1,4 +1,4 @@
-import type { LiftRule, Plane, ReticuleOptions } from './types.js'
+import type { LiftRule, Plane, DelaminateOptions } from './types.js'
 
 /** A plane's geometry, before anything has asked whether it renders at depth. */
 export type Placement = Omit<Plane, 'flattened'>
@@ -18,7 +18,7 @@ interface Raw {
 }
 
 function liftFor(el: HTMLElement, rules: LiftRule[]): number {
-  const own = el.dataset.rzLift
+  const own = el.dataset.dlLift
   if (own !== undefined) {
     const n = Number(own)
     if (Number.isFinite(n)) return n
@@ -58,7 +58,7 @@ function eligible(parent: HTMLElement, skip: string | undefined): HTMLElement[] 
     if (!(child instanceof HTMLElement) && !(child instanceof SVGElement)) continue
     const el = child as HTMLElement
     if (SKIP_TAGS.has(el.tagName)) continue
-    if (el.hasAttribute('data-rz-skip')) continue
+    if (el.hasAttribute('data-dl-skip')) continue
     if (skip && el.matches(skip)) continue
     out.push(el)
   }
@@ -74,7 +74,7 @@ function eligible(parent: HTMLElement, skip: string | undefined): HTMLElement[] 
  */
 export function collect(
   root: HTMLElement,
-  opts: Required<Pick<ReticuleOptions, 'falloff' | 'maxDepth' | 'fan'>> & Pick<ReticuleOptions, 'skip'> & { lift: LiftRule[] },
+  opts: Required<Pick<DelaminateOptions, 'falloff' | 'maxDepth' | 'fan'>> & Pick<DelaminateOptions, 'skip'> & { lift: LiftRule[] },
 ): Raw[] {
   const out: Raw[] = []
   const walk = (parent: HTMLElement, parentRaw: number, level: number, spacing: number) => {

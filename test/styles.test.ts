@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { CSS, injectStyles, styleRootFor } from '../src/styles.js'
-import { reticulize } from '../src/reticulize.js'
+import { delaminate } from '../src/delaminate.js'
 
-const tag = (doc: Document) => doc.querySelector('style[data-reticul8r]')
+const tag = (doc: Document) => doc.querySelector('style[data-delamin8r]')
 
 function blank(): Document {
   return document.implementation.createHTMLDocument('test')
@@ -22,7 +22,7 @@ describe('injectStyles', () => {
     const doc = blank()
     injectStyles(doc)
     injectStyles(doc)
-    expect(doc.querySelectorAll('style[data-reticul8r]')).toHaveLength(1)
+    expect(doc.querySelectorAll('style[data-delamin8r]')).toHaveLength(1)
   })
 
   it('writes the stylesheet the build emits', () => {
@@ -37,10 +37,10 @@ describe('injectStyles', () => {
     const shadow = host.attachShadow({ mode: 'open' })
     shadow.innerHTML = '<div id="panel"><span>x</span></div>'
 
-    const handle = reticulize(shadow.getElementById('panel') as HTMLElement, { driver: false })
+    const handle = delaminate(shadow.getElementById('panel') as HTMLElement, { driver: false })
     // Document styles do not cross the boundary, so a sheet left outside is a
     // sheet the planes never get.
-    expect(shadow.querySelector('style[data-reticul8r]')).not.toBeNull()
+    expect(shadow.querySelector('style[data-delamin8r]')).not.toBeNull()
     handle.destroy()
     host.remove()
   })

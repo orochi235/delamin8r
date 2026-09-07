@@ -1,4 +1,4 @@
-# reticul8r
+# delamin8r
 
 Turn a DOM subtree into a parallax window. The elements already in it become
 depth planes, and pointer movement — or the phone's accelerometer — swings them
@@ -7,9 +7,9 @@ past each other inside one perspective.
 You don't author a scene. You wrap a container you already wrote.
 
 ```js
-import { reticulize } from 'reticul8r'
+import { delaminate } from 'delamin8r'
 
-const handle = reticulize(document.querySelector('.panel'))
+const handle = delaminate(document.querySelector('.panel'))
 ```
 
 That's the whole setup. The stylesheet injects itself — into the container's
@@ -19,10 +19,10 @@ shadow root if that is where it lives — the pointer starts driving it, and
 React:
 
 ```jsx
-import { useReticule } from 'reticul8r/react'
+import { useDelaminate } from 'delamin8r/react'
 
 function Panel() {
-  const { ref } = useReticule()
+  const { ref } = useDelaminate()
   return <div ref={ref}>{/* whatever you already had */}</div>
 }
 ```
@@ -39,7 +39,7 @@ unless something actually separates them:
   clear of the tied plane, in the order it declared
 - **a semantic lift** — buttons, links and form controls come forward a step and
   a half; badges, `mark` and `kbd` come forward two and a half
-- **`data-rz-lift="3"`** on any element, to say it yourself
+- **`data-dl-lift="3"`** on any element, to say it yourself
 
 Document order does not fan siblings on its own. Four rows in a list do not
 overlap, so the order the browser paints them in carries no depth, and
@@ -48,7 +48,7 @@ staircasing them looks like a bug. Set `fan: 1` if you want it anyway.
 Depth runs *toward* the viewer, never away, because an element pushed behind its
 own parent disappears into that parent's background.
 
-Put `data-rz-skip` on anything that should stay flat. Its subtree stays flat too.
+Put `data-dl-skip` on anything that should stay flat. Its subtree stays flat too.
 
 ## The two modes
 
@@ -113,8 +113,8 @@ transform properties. A transformed element is a containing block for `fixed`
 and `absolute` descendants, which it may not have been before.
 
 Everything else is a custom property on the container, so nothing per-element is
-hard-coded: `--rz-px` and `--rz-py` are the deflection, ±1, and `--rz-mx` /
-`--rz-my` track the pointer as percentages for a surface sheen.
+hard-coded: `--dl-px` and `--dl-py` are the deflection, ±1, and `--dl-mx` /
+`--dl-my` track the pointer as percentages for a surface sheen.
 
 ## Options
 

@@ -31,7 +31,7 @@ class FakeIntersectionObserver {
   }
 }
 
-/** Move every reticulized stage in or out of view. */
+/** Move every delaminated stage in or out of view. */
 export function setVisibility(isIntersecting: boolean): void {
   for (const observer of FakeIntersectionObserver.live) observer.report(isIntersecting)
 }

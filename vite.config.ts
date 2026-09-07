@@ -7,8 +7,8 @@ import { CSS } from './src/styles.js'
 export default defineConfig({
   resolve: {
     alias: {
-      reticul8r: resolve(__dirname, 'src/index.ts'),
-      'reticul8r/react': resolve(__dirname, 'src/react.ts'),
+      delamin8r: resolve(__dirname, 'src/index.ts'),
+      'delamin8r/react': resolve(__dirname, 'src/react.ts'),
     },
   },
   test: {
@@ -18,7 +18,7 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: { reticul8r: resolve(__dirname, 'src/index.ts'), react: resolve(__dirname, 'src/react.ts') },
+      entry: { delamin8r: resolve(__dirname, 'src/index.ts'), react: resolve(__dirname, 'src/react.ts') },
       formats: ['es'],
     },
     rollupOptions: { external: ['react'] },
@@ -26,9 +26,9 @@ export default defineConfig({
   plugins: [
     dts({ include: ['src'], rollupTypes: false }),
     {
-      name: 'reticul8r:emit-css',
+      name: 'delamin8r:emit-css',
       closeBundle() {
-        writeFileSync(resolve(__dirname, 'dist/reticul8r.css'), CSS.trimStart())
+        writeFileSync(resolve(__dirname, 'dist/delamin8r.css'), CSS.trimStart())
       },
     },
   ],

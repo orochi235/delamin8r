@@ -49,7 +49,7 @@ body {
   color: var(--muted);
 }
 
-/* Nothing here knows about reticul8r. It is an ordinary card. */
+/* Nothing here knows about delamin8r. It is an ordinary card. */
 .stagewrap { width: min(460px, 100%); }
 
 .card {
@@ -66,7 +66,7 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 12px;
-  background: radial-gradient(380px circle at var(--rz-mx, 50%) var(--rz-my, 50%), rgb(255 215 0 / 0.13), transparent 70%);
+  background: radial-gradient(380px circle at var(--dl-mx, 50%) var(--dl-my, 50%), rgb(255 215 0 / 0.13), transparent 70%);
   pointer-events: none;
 }
 
