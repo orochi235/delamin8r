@@ -13,6 +13,7 @@ export default defineConfig({
       'delamin8r/react': resolve(__dirname, '../src/react.ts'),
     },
   },
+  server: { host: '::' },
   build: { outDir: 'dist', emptyOutDir: true },
   plugins: [highlight()],
 })

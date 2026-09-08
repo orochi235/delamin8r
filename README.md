@@ -64,6 +64,10 @@ holds the perspective and so does not rotate, which means **your card's visible
 surface has to be inside it**, not on it. The usual shape is a bare wrapper
 around the card.
 
+An injected deck becomes the container's only child, so **a container that was
+laying its own children out — a grid, a flex row — is left holding one item**
+and loses its tracks. Give it a single child of its own, or pass `deck`.
+
 ## What drives it
 
 By default, the pointer and the accelerometer at the same time — whichever is

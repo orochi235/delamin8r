@@ -74,6 +74,16 @@ const modes: Page = {
           <code>&lt;div class="stagewrap"&gt;</code> is on the right. The wrapper carries the
           perspective; the card carries the paint.
         </p>
+        <div class="prose">
+          <p>
+            Injection has a second cost, and it fails differently. The wrapper becomes the
+            container's only child, so <strong>a container that was laying its own children
+            out — a grid, a flex row — is left holding one item</strong> and loses its tracks.
+            The boarding pass on the showcase page stacked into a single column until it was
+            given a bare wrapper of its own. Pass <code>deck</code> to say which element should
+            turn, and nothing is injected.
+          </p>
+        </div>
       </section>
 
       <section>
