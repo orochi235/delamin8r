@@ -3,3 +3,4 @@ dist
 *.tsbuildinfo
 shots/
 site/dist
+.playwright-mcp
