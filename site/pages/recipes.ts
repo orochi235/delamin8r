@@ -6,10 +6,9 @@ import hoverCard from '../demos/recipes/hover-card.js'
 import sheen from '../demos/recipes/sheen.js'
 import dialog from '../demos/recipes/dialog.js'
 import scrollBand from '../demos/recipes/scroll-band.js'
-import fanTable from '../demos/recipes/fan-table.js'
 import quietText from '../demos/recipes/quiet-text.js'
 
-const EXAMPLES: Example[] = [hoverCard, sheen, dialog, scrollBand, fanTable, quietText]
+const EXAMPLES: Example[] = [hoverCard, sheen, dialog, scrollBand, quietText]
 
 const recipes: Page = {
   slug: 'recipes',

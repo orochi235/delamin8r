@@ -53,8 +53,8 @@ const PASS = `
 
 const PIECES: Array<[string, string, string, DelaminateOptions]> = [
   ['np', 'Now playing', NOW_PLAYING, { mode: 'tilt', tilt: 15 }],
-  ['tty', 'A terminal', TERMINAL, { mode: 'window', fan: 0.5 }],
-  ['pass', 'A boarding pass', PASS, { mode: 'tilt', tilt: 10, fan: 0.4 }],
+  ['tty', 'A terminal', TERMINAL, { mode: 'window' }],
+  ['pass', 'A boarding pass', PASS, { mode: 'tilt', tilt: 10 }],
 ]
 
 const showcase: Page = {
@@ -81,13 +81,12 @@ const showcase: Page = {
         </section>`,
       ).join('')}
       <section>
-        ${label(4, 'the only trick')}
+        ${label(4, 'where the depth came from')}
         <div class="prose">
           <p>
-            The waveform above fans because its bars are siblings and
-            <code>fan</code> was turned on for that piece — twenty <code>&lt;i&gt;</code>
-            elements, no classes, no indices. Everywhere else the depth is what the nesting
-            already said.
+            There is no trick. Every plane above sits where the nesting already put it — a
+            child a step in front of its parent, siblings together on one plane. Nothing here
+            declares a depth, and nothing here is ordered by hand.
           </p>
         </div>
       </section>

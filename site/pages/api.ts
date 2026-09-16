@@ -5,7 +5,6 @@ const OPTIONS: Array<[string, string, string]> = [
   ['mode', "'window'", "'window' moves the viewpoint and injects nothing. 'tilt' rotates an inner deck."],
   ['step', 'derived', 'Z between adjacent planes, in px. Taken from the container when unset.'],
   ['falloff', '0.5', 'How much the spacing shrinks at each level of nesting.'],
-  ['fan', '0', 'Steps of extra depth per sibling in document order. Zero ties them.'],
   ['maxDepth', '∞', 'How many levels below the container become planes.'],
   ['origin', '0', "Fraction of the stack sliding behind the container. Only sensible when it's transparent."],
   ['perspective', 'derived', 'The projection. Scales with the container unless you set it.'],

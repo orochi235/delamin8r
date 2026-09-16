@@ -17,12 +17,6 @@ export interface DelaminateOptions {
   step?: number
   /** Multiplier applied to `step` at each level of nesting. */
   falloff?: number
-  /**
-   * Steps of extra depth per sibling, in document order. Zero - the default -
-   * ties siblings on one plane, since document order between elements that do
-   * not overlap says nothing about depth.
-   */
-  fan?: number
   /** How many levels below the container become planes. */
   maxDepth?: number
   /** Fraction of the Z range that sits in front of the container's own plane. */

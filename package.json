@@ -1,6 +1,6 @@
 {
   "name": "delamin8r",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Turn a DOM subtree into a parallax window: the elements already in it become depth planes.",
   "keywords": [
     "parallax",

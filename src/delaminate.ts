@@ -36,7 +36,6 @@ function resolve(o: DelaminateOptions) {
     mode,
     step: o.step,
     falloff: o.falloff ?? 0.5,
-    fan: o.fan ?? 0,
     maxDepth: o.maxDepth ?? Infinity,
     origin: o.origin ?? 0,
     tilt: o.tilt ?? (tiltDefaults ? 12 : 0),
@@ -124,7 +123,7 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
     // rather than one per plane.
     const box = stage.getBoundingClientRect()
     const dim = sized(box, cfg.mode, options)
-    const raws = collect(root, { falloff: cfg.falloff, maxDepth: cfg.maxDepth, fan: cfg.fan, skip: cfg.skip, lift: cfg.lift })
+    const raws = collect(root, { falloff: cfg.falloff, maxDepth: cfg.maxDepth, skip: cfg.skip, lift: cfg.lift })
     planes = fit(raws, dim.span, cfg.origin, cfg.step).map((placed) => ({
       ...placed,
       // Derived on demand: answering it walks the ancestors, and almost nobody

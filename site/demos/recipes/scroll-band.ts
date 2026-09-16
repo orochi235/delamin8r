@@ -12,7 +12,7 @@ const MARKUP = `
 
 function mount(host: HTMLElement) {
   host.innerHTML = MARKUP
-  const handle = delaminate(host, { driver: 'scroll', fan: 1 })
+  const handle = delaminate(host, { driver: 'scroll' })
   return () => handle.destroy()
 }
 // #endregion

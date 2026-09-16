@@ -74,13 +74,13 @@ function eligible(parent: HTMLElement, skip: string | undefined): HTMLElement[] 
  */
 export function collect(
   root: HTMLElement,
-  opts: Required<Pick<DelaminateOptions, 'falloff' | 'maxDepth' | 'fan'>> & Pick<DelaminateOptions, 'skip'> & { lift: LiftRule[] },
+  opts: Required<Pick<DelaminateOptions, 'falloff' | 'maxDepth'>> & Pick<DelaminateOptions, 'skip'> & { lift: LiftRule[] },
 ): Raw[] {
   const out: Raw[] = []
   const walk = (parent: HTMLElement, parentRaw: number, level: number, spacing: number) => {
     if (level > opts.maxDepth) return
-    separate(eligible(parent, opts.skip)).forEach(({ el, step }, i) => {
-      const raw = parentRaw + (1 + step + opts.fan * i + liftFor(el, opts.lift)) * spacing
+    separate(eligible(parent, opts.skip)).forEach(({ el, step }) => {
+      const raw = parentRaw + (1 + step + liftFor(el, opts.lift)) * spacing
       out.push({ el, raw, parentRaw, level })
       walk(el, raw, level + 1, spacing * opts.falloff)
     })

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { collect, DEFAULT_LIFT, fit } from '../src/depth.js'
 
-const OPTS = { falloff: 0.5, maxDepth: Infinity, fan: 0, lift: [] as never[] }
+const OPTS = { falloff: 0.5, maxDepth: Infinity, lift: [] as never[] }
 
 function tree(html: string): HTMLElement {
   document.body.innerHTML = `<div id="root">${html}</div>`
@@ -37,11 +37,6 @@ describe('collect', () => {
   it('ties siblings on one plane', () => {
     const z = raws(tree('<i id="a"></i><i id="b"></i><i id="c"></i>'))
     expect(z).toEqual({ a: 1, b: 1, c: 1 })
-  })
-
-  it('fans siblings in document order when asked', () => {
-    const z = raws(tree('<i id="a"></i><i id="b"></i><i id="c"></i>'), { fan: 1 })
-    expect(z).toEqual({ a: 1, b: 2, c: 3 })
   })
 
   it('lifts each sibling that declares a z-index, in declared order', () => {

@@ -41,9 +41,9 @@ unless something actually separates them:
   a half; badges, `mark` and `kbd` come forward two and a half
 - **`data-dl-lift="3"`** on any element, to say it yourself
 
-Document order does not fan siblings on its own. Four rows in a list do not
-overlap, so the order the browser paints them in carries no depth, and
-staircasing them looks like a bug. Set `fan: 1` if you want it anyway.
+Document order never separates siblings. Four rows in a list do not overlap, so
+the order the browser paints them in carries no depth, and staircasing them
+looks like a bug. Lift the one that is actually nearer instead.
 
 Depth runs *toward* the viewer, never away, because an element pushed behind its
 own parent disappears into that parent's background.
@@ -127,7 +127,6 @@ hard-coded: `--dl-px` and `--dl-py` are the deflection, ±1, and `--dl-mx` /
 | `mode` | `'window'` (default) or `'tilt'` |
 | `step` | Z between adjacent planes in px. Derived from the container when unset |
 | `falloff` | how much the spacing shrinks per level of nesting — `0.5` |
-| `fan` | steps of extra depth per sibling in document order — `0` |
 | `maxDepth` | levels below the container that become planes — unlimited |
 | `origin` | fraction of the stack sliding behind the container — `0`. Only for a transparent one |
 | `perspective`, `swing`, `tilt` | the projection and how far it swings. The first two scale with the container unless you set them |

@@ -37,9 +37,6 @@ const depth: Page = {
               <p class="ctl"><label for="falloff">falloff</label>
                 <input id="falloff" type="range" min="0.2" max="1" step="0.05" value="0.5" />
                 <output id="falloffOut">0.50</output></p>
-              <p class="ctl"><label for="fan">fan</label>
-                <input id="fan" type="range" min="0" max="2" step="0.25" value="0" />
-                <output id="fanOut">0.00</output></p>
               <p class="ctl"><label for="maxDepth">max depth</label>
                 <input id="maxDepth" type="range" min="1" max="${DEPTHLESS}" step="1" value="${DEPTHLESS}" />
                 <output id="maxDepthOut">none</output></p>
@@ -86,8 +83,6 @@ const depth: Page = {
               <td>buttons, links and form controls come forward a step and a half; badges, <code>mark</code> and <code>kbd</code> come forward two and a half</td></tr>
             <tr><td><code>data-dl-lift="3"</code></td>
               <td>say it yourself, on any element</td></tr>
-            <tr><td><code>fan</code></td>
-              <td>steps of extra depth per sibling in document order. Off by default; the slider above turns it on</td></tr>
           </tbody>
         </table>
         <p class="note">
@@ -130,7 +125,6 @@ const depth: Page = {
       const md = num('maxDepth')
       return {
         falloff: num('falloff'),
-        fan: num('fan'),
         maxDepth: md === DEPTHLESS ? undefined : md,
         origin: num('origin'),
         scaleCompensate: checked('scale'),
@@ -143,7 +137,6 @@ const depth: Page = {
       const o = options()
       return {
         falloff: o.falloff === 0.5 ? undefined : o.falloff,
-        fan: o.fan === 0 ? undefined : o.fan,
         maxDepth: o.maxDepth,
         origin: o.origin === 0 ? undefined : o.origin,
         scaleCompensate: o.scaleCompensate ? undefined : false,
@@ -160,7 +153,6 @@ const depth: Page = {
       wrapBtn.setAttribute('aria-pressed', String(wrapped))
 
       $('#falloffOut', root).textContent = num('falloff').toFixed(2)
-      $('#fanOut', root).textContent = num('fan').toFixed(2)
       $('#originOut', root).textContent = num('origin').toFixed(2)
       $('#maxDepthOut', root).textContent = num('maxDepth') === DEPTHLESS ? 'none' : String(num('maxDepth'))
 
@@ -174,7 +166,7 @@ const depth: Page = {
     }
 
     const onInput = () => build()
-    for (const id of ['falloff', 'fan', 'maxDepth', 'origin', 'scale']) {
+    for (const id of ['falloff', 'maxDepth', 'origin', 'scale']) {
       $(`#${id}`, root).addEventListener('input', onInput)
     }
 
@@ -186,7 +178,6 @@ const depth: Page = {
 
     const onReset = () => {
       $<HTMLInputElement>('#falloff', root).value = '0.5'
-      $<HTMLInputElement>('#fan', root).value = '0'
       $<HTMLInputElement>('#maxDepth', root).value = String(DEPTHLESS)
       $<HTMLInputElement>('#origin', root).value = '0'
       $<HTMLInputElement>('#scale', root).checked = true
