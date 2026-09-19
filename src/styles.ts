@@ -41,6 +41,15 @@ export const CSS = `
   transform-origin: var(--dl-o, 50% 50%);
 }
 
+/* A plane with no planes under it needs no 3D context of its own, and giving
+   it one costs pointer accuracy: everything in the subtree is then hit-tested
+   against a box the browser does not paint it at, so a slider thumb answers a
+   pixel or two from where it looks. Its own Z is unaffected - transform-style
+   governs its children, not itself. */
+.dl-plane.dl-leaf {
+  transform-style: flat;
+}
+
 /* The Z offsets stay - they are the layout, not the motion. What goes is the
    pointer response. */
 @media (prefers-reduced-motion: reduce) {

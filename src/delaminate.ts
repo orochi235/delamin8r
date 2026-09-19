@@ -105,7 +105,7 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
 
   const clear = () => {
     for (const p of planes) {
-      p.el.classList.remove('dl-plane')
+      p.el.classList.remove('dl-plane', 'dl-leaf')
       p.el.style.removeProperty('--dl-z')
       p.el.style.removeProperty('--dl-s')
       p.el.style.removeProperty('--dl-d')
@@ -132,6 +132,12 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
         return placed.level > 1 && flattener(placed.el) !== null
       },
     }))
+    // Every plane that has a plane under it. A plane is only collected for a
+    // direct child of another, so a parent element in this set is that child's
+    // plane; the rest are leaves.
+    const branch = new Set<HTMLElement>()
+    for (const raw of raws) if (raw.el.parentElement) branch.add(raw.el.parentElement)
+
     const p = dim.perspective
 
     const cx = box.left + box.width / 2
@@ -158,6 +164,7 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
         plane.el.style.setProperty('--dl-o', `${(cx - r.left).toFixed(1)}px ${(cy - r.top).toFixed(1)}px`)
       }
       plane.el.classList.add('dl-plane')
+      if (!branch.has(plane.el)) plane.el.classList.add('dl-leaf')
     })
 
     // Everything above wrote to the subtree the observer is watching. Dropping

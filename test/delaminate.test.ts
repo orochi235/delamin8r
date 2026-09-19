@@ -51,6 +51,17 @@ describe('delaminate', () => {
     handle.destroy()
   })
 
+  it('marks a plane with nothing under it as a leaf, so its subtree stays out of 3D', () => {
+    const panel = mount('<div><span>a</span></div><span>b</span>')
+    const handle = delaminate(panel, { driver: false })
+    const [outer, inner, sibling] = handle.planes.map((p) => p.el)
+    expect(outer!.classList.contains('dl-leaf')).toBe(false)
+    expect(inner!.classList.contains('dl-leaf')).toBe(true)
+    expect(sibling!.classList.contains('dl-leaf')).toBe(true)
+    handle.destroy()
+    expect(panel.querySelector('.dl-leaf')).toBe(null)
+  })
+
   it('scales the depth to the container it is given', () => {
     const panel = mount('<span>x</span>')
     size(panel, 1000, 400)
