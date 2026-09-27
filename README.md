@@ -161,7 +161,7 @@ tears its handles down.
 
 ## Where it came from
 
-slopboard's about-modal (`?` key) does this by hand across seven layers with
-`--depth` written out one at a time: `~/src/slopboard/src/ParallaxModal.tsx`.
+transom's about-modal (`?` key) does this by hand across seven layers with
+`--depth` written out one at a time: `~/src/transom/src/ParallaxModal.tsx`.
 The easing, the drift-on-top-of-rotation, and measuring the upright stage rather
 than the rotated deck all come from there.
