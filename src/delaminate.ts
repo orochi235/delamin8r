@@ -116,7 +116,10 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
 
   const driftAt = (z: number) => (z >= 0 ? z * cfg.drift.near : z * cfg.drift.far)
 
+  let destroyed = false
+
   const apply = () => {
+    if (destroyed) return
     clear()
 
     // Read every rect before writing anything, so the loop costs one layout
@@ -241,12 +244,14 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
   }
 
   const attach = (d: DriverName | Driver | false) => {
+    if (destroyed) return
     driver?.stop()
     driver = null
     spec = d
     if (d === false || reduced.matches || !onscreen) return
-    driver = build(d)
-    driver.start(ctx)
+    const next = build(d)
+    next.start(ctx)
+    driver = next
   }
 
   // Both the plane transform origins and the derived spacing are read off
@@ -312,10 +317,13 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
     },
     refresh: apply,
     setDriver: attach,
-    set: (x, y) => ctx.set(x, y),
+    set: (x, y) => {
+      if (!destroyed) ctx.set(x, y)
+    },
     async enableOrientation() {
+      if (destroyed) return false
       const ok = await requestOrientationPermission()
-      if (!ok) return false
+      if (!ok || destroyed) return false
       // Bring the sensor into the mix if it was left out, and otherwise restart
       // it in place so its listener is live now that the prompt has been
       // answered - without dropping the pointer it is fused with.
@@ -340,6 +348,8 @@ export function delaminate(container: HTMLElement, options: DelaminateOptions & 
       return out
     },
     destroy() {
+      if (destroyed) return
+      destroyed = true
       observer.disconnect()
       resizer.disconnect()
       watcher?.disconnect()

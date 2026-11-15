@@ -94,5 +94,9 @@ export interface DelaminateHandle {
   calibrate(): void
   /** Planes that will not render at depth, and what is flattening them. */
   diagnose(): Array<{ el: HTMLElement; cause: string; culprit: HTMLElement }>
+  /**
+   * Puts the DOM back and stops everything. Final and safe to repeat: afterward
+   * every other method does nothing, and `enableOrientation` resolves false.
+   */
   destroy(): void
 }
